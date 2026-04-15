@@ -1,0 +1,7 @@
+interface:
+  display_name: "Spider King"
+  short_description: "Pure-protocol reverse collectors"
+  default_prompt: "Use $spider-king to turn this hostile web client, GraphQL or WebSocket flow, or encoded API into a pure-protocol Python collector."
+
+policy:
+  allow_implicit_invocation: true
