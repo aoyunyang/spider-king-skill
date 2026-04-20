@@ -1,0 +1,7 @@
+interface:
+  display_name: "Spider King"
+  short_description: "Dual-MCP analysis, browser-free collectors"
+  default_prompt: "Use $spider-king to analyze every new hostile target first with chrome-devtools and js-reverse, then deliver a browser-free Python collector plus a local JS parameter-restoration helper only when needed."
+
+policy:
+  allow_implicit_invocation: true
