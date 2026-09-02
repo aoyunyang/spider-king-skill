@@ -218,7 +218,6 @@ spider-king/
 ├── DISCLAIMER.md
 ├── LICENSE
 ├── SKILL.md
-├── pytest.ini
 ├── agents/
 │   └── openai.yaml
 ├── scripts/
