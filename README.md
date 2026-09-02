@@ -6,8 +6,6 @@
 
 它的目标不是“让浏览器替你把请求点过去”，也不是“把页面里的 `fetch` 搬出来凑合跑”，而是把那些看起来依赖浏览器环境、页面上下文、挑战脚本或状态流的目标，拆回成一条可复现、可验证、可维护的本地协议链路。
 
-> **免责声明**：本项目按现状提供。别人拿去干什么，与作者无关；使用后果由使用者自行承担。详见 [DISCLAIMER.md](./DISCLAIMER.md)。
-
 这套 Skill 默认强调以下交付原则：
 
 - 先证据，后结论
@@ -215,7 +213,6 @@ fresh `live-target`：
 ```text
 spider-king/
 ├── README.md
-├── DISCLAIMER.md
 ├── LICENSE
 ├── SKILL.md
 ├── agents/
