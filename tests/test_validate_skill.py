@@ -516,10 +516,22 @@ class DirectoryHygieneValidationTests(unittest.TestCase):
 
             self.assertEqual(result.errors, [])
 
-    def test_rejects_root_readme_shadow_document(self) -> None:
+    def test_allows_root_github_landing_documents(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "README.md").write_text("# Duplicate\n", encoding="utf-8")
+            (root / "README.md").write_text("# Landing\n", encoding="utf-8")
+            (root / "DISCLAIMER.md").write_text("# Legal\n", encoding="utf-8")
+            (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
+            result = validate_skill.Validation()
+
+            validate_skill.validate_directory_hygiene(root, result)
+
+            self.assertEqual(result.errors, [])
+
+    def test_rejects_root_changelog_shadow_document(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "CHANGELOG.md").write_text("# Duplicate\n", encoding="utf-8")
             result = validate_skill.Validation()
 
             validate_skill.validate_directory_hygiene(root, result)
@@ -570,6 +582,70 @@ class DirectoryHygieneValidationTests(unittest.TestCase):
                 any("auxiliary skill document" in error for error in result.errors),
                 result.errors,
             )
+
+    def test_rejects_generated_test_runner_dumps(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            tests = root / "tests"
+            tests.mkdir()
+            (tests / "_err_test_example.py.txt").write_text("boom\n", encoding="utf-8")
+            (tests / "_out_test_example.py.txt").write_text("", encoding="utf-8")
+            (tests / "keep_me.txt").write_text("ok\n", encoding="utf-8")
+            result = validate_skill.Validation()
+
+            validate_skill.validate_directory_hygiene(root, result)
+
+            dump_errors = [
+                error
+                for error in result.errors
+                if "generated test-runner dump" in error
+            ]
+            self.assertEqual(len(dump_errors), 2, result.errors)
+            self.assertTrue(any("_err_test_example.py.txt" in error for error in dump_errors))
+            self.assertTrue(any("_out_test_example.py.txt" in error for error in dump_errors))
+            self.assertFalse(any("keep_me.txt" in error for error in result.errors), result.errors)
+
+    def test_rejects_generated_local_noise_files(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "module.pyc").write_bytes(b"\0")
+            (root / ".DS_Store").write_bytes(b"\0")
+            (root / "notes.log").write_text("x\n", encoding="utf-8")
+            (root / "keep.py").write_text("x = 1\n", encoding="utf-8")
+            result = validate_skill.Validation()
+
+            validate_skill.validate_directory_hygiene(root, result)
+
+            noise_errors = [
+                error
+                for error in result.errors
+                if "generated local noise file" in error
+            ]
+            self.assertEqual(len(noise_errors), 3, result.errors)
+            self.assertFalse(any("keep.py" in error for error in result.errors), result.errors)
+
+    def test_clean_package_hygiene_removes_known_dirt_only(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cache = root / "scripts" / "__pycache__"
+            cache.mkdir(parents=True)
+            (cache / "x.pyc").write_bytes(b"\0")
+            dump = root / "tests" / "_err_test_example.py.txt"
+            dump.parent.mkdir(parents=True)
+            dump.write_text("boom\n", encoding="utf-8")
+            keep = root / "tests" / "test_keep.py"
+            keep.write_text("def test_ok():\n    assert True\n", encoding="utf-8")
+
+            removed = validate_skill.clean_package_hygiene(root)
+
+            self.assertTrue(any("__pycache__" in item for item in removed), removed)
+            self.assertTrue(any("_err_test_example.py.txt" in item for item in removed), removed)
+            self.assertFalse(cache.exists())
+            self.assertFalse(dump.exists())
+            self.assertTrue(keep.exists())
+            result = validate_skill.Validation()
+            validate_skill.validate_directory_hygiene(root, result)
+            self.assertEqual(result.errors, [])
 
 
 class OpenAIMetadataValidationTests(unittest.TestCase):
@@ -835,6 +911,7 @@ class ClaudeFusionDocumentContractTests(unittest.TestCase):
         "references/delivery-gate-playbook.md",
         "references/project-artifact-contract.md",
         "references/skill-maintenance.md",
+        "references/mcp-routing-playbook.md",
         "agents/openai.yaml",
         "scripts/check_reverse_env.py",
     )

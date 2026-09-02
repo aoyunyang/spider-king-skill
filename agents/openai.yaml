@@ -1,7 +1,7 @@
 interface:
   display_name: "Spider King"
-  short_description: "Protocol-first web reversal and Python collector delivery"
-  default_prompt: "Use $spider-king to classify live target, artifact-only, or continuation work, gather sequential paired browser evidence when required, and deliver the smallest protocol-first Python result."
+  short_description: "Pure-web protocol reverse with signal-driven MCP routing"
+  default_prompt: "Use $spider-king for pure-web protocol reverse only: auto-judge artifact-only vs live target (live-target) vs continuation from signals; default live baseline is chrome-devtools and upgrade to Camoufox/managed host only on fingerprint pressure; use js-reverse after sequential handoff when debug attach exists; keep APK/app/mini-program primary tasks out of scope; deliver the smallest browser-free Python protocol result."
 
 policy:
   allow_implicit_invocation: true

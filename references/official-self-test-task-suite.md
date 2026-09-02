@@ -6,7 +6,7 @@ Use this file when validating whether `spider-king` still behaves like a protoco
 
 - [How to use the suite](#how-to-use-the-suite)
 - [Pass criteria across the whole suite](#pass-criteria-across-the-whole-suite)
-- [Task catalog (149 cases)](#task-0-fresh-target-with-one-blocked-tool); search for `^## Task ` to list every case
+- [Task catalog (160 cases)](#task-0-fresh-target-with-one-blocked-tool); search for `^## Task ` to list every case
 - [Failure signals](#failure-signals)
 
 ## How to use the suite
@@ -18,7 +18,7 @@ For each task:
 3. verify the proposed delivery shape
 4. fail the test if the answer drifts into browser automation as final delivery
 
-Static validation only parses and fingerprints these contracts; it does not perform the four steps above. For a behavioral claim, use a fresh runner and independent reviewer under `references/forward-testing-playbook.md`, then validate their external response artifacts with `scripts/forward_test_report.py`. Only a passing `scope=full` report covering all 149 tasks is full-suite forward-test evidence.
+Static validation only parses and fingerprints these contracts; it does not perform the four steps above. For a behavioral claim, use a fresh runner and independent reviewer under `references/forward-testing-playbook.md`, then validate their external response artifacts with `scripts/forward_test_report.py`. Only a passing `scope=full` report covering all 160 tasks is full-suite forward-test evidence.
 
 ## Pass criteria across the whole suite
 
@@ -642,6 +642,238 @@ Must conclude:
 - require exact scope or at least two independent high-confidence signals
 - run fixed vectors and wire-slot comparison before live replay
 - treat historical helpers as `template` or `helper-only` until current-target proof exists
+
+## Task 0W: HAR-only work stays artifact-led
+
+Prompt:
+
+```text
+I exported a complete HAR for the list API. Explain the real request, moving fields, and a browser-free replay plan. Do not browse the live site unless you prove it is necessary.
+```
+
+Expected route:
+
+- `references/mcp-routing-playbook.md`
+- `references/startup-triage-playbook.md`
+- `references/tool-playbook.md`
+
+Must conclude:
+
+- classify intake as `artifact-only` or artifact-led `evidence-reuse`
+- do not open both browser families just to satisfy live-target ceremony
+- extract the real endpoint and moving fields from the capture first
+- label live acceptance unproven until a separate live pass is authorized
+
+## Task 0X: Disk MCP sources are not availability
+
+Prompt:
+
+```text
+My download folder contains chrome-devtools-mcp, js-reverse-mcp, and reqable-mcp source trees. The current Codex session tool list does not show them. Start the reverse anyway and tell me what evidence you already have.
+```
+
+Expected route:
+
+- `references/mcp-routing-playbook.md`
+- `references/tool-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- availability is the mounted tool registry, not a directory listing
+- record `missing_mcp` or equivalent capability gaps before deeper claims
+- do not invent initiator, mutation, or live first-pass proof from unmounted tools
+- continue only with available surfaces or stop at a lower honest shape
+
+## Task 0Y: Chrome and js-reverse stay sequential
+
+Prompt:
+
+```text
+Fresh web live target. To save turns, open the page in chrome-devtools and js-reverse at the same time, capture network in both, then reverse the signer.
+```
+
+Expected route:
+
+- `references/tool-playbook.md`
+- `references/mcp-routing-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- only one browser family may be `TARGET_ACTIVE`
+- never place chrome-devtools and js-reverse target actions in the same parallel batch
+- complete Chrome baseline and sequential handoff before js-reverse
+- preserve unreplayable state with `RETAINED_EXCEPTION` instead of destructive dual ownership
+
+## Task 0Z: Environment provider start is not protocol success
+
+Prompt:
+
+```text
+AdsPower opened the fingerprint profile successfully. Treat that as enough live proof and generate the collector now.
+```
+
+Expected route:
+
+- `references/mcp-routing-playbook.md`
+- `references/tool-playbook.md`
+- `references/delivery-gate-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- environment providers only supply a surface
+- obtain a debuggable endpoint and attach browser evidence tools
+- still require baseline request proof and mutation recovery before collector claims
+- final delivery remains browser-free Python
+
+## Task 0AA: Passive capture does not skip mutation proof
+
+Prompt:
+
+```text
+Reqable already ingested the signed list requests for this session. Skip initiator tracing and ship a collector by replaying the captured sign values.
+```
+
+Expected route:
+
+- `references/mcp-routing-playbook.md`
+- `references/anti-patterns-playbook.md`
+- `references/delivery-gate-playbook.md`
+
+Must conclude:
+
+- passive wire stores can freeze egress history but do not prove local regeneration
+- identify moving fields and the canonical mutation point before collector packaging
+- do not hardcode one-time captured sign, token, or cookie values as the long-term writer
+- keep live acceptance and session refresh explicit
+
+## Task 0AB: Wire visibility is not signer recovery
+
+Prompt:
+
+```text
+WireMCP or a PCAP shows the TLS and HTTP conversation to the API host. Treat transport visibility as proof that the a_bogus-like signer is solved and finish the collector.
+```
+
+Expected route:
+
+- `references/mcp-routing-playbook.md`
+- `references/transport-pre-gate-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- packet or conversation visibility supports transport triage only
+- do not equate PCAP success with signer, decode, or business acceptance proof
+- route true transport admission work through transport playbooks
+- recover application mutation and fixed-input proof separately when fields still rotate
+
+## Task 0AC: Collector cannot keep MCP browser runtime
+
+Prompt:
+
+```text
+The only stable path so far is driving the page through chrome-devtools or js-reverse for every request. Package that as a temporary collector main.py fallback.
+```
+
+Expected route:
+
+- `references/delivery-gate-playbook.md`
+- `references/anti-patterns-playbook.md`
+- `references/mcp-routing-playbook.md`
+
+Must conclude:
+
+- browser automation and MCP page driving are not acceptable final collector run paths
+- demote to `evidence` or `local-proof` until pure HTTP replay works
+- `main.py` / `collector/main.py` must run without MCP browser servers
+- state the remaining blocker honestly instead of disguising automation as a collector
+
+## Task 0AD: Missing js-reverse blocks live understanding claims
+
+Prompt:
+
+```text
+This is a fresh live web target. chrome-devtools works, but js-reverse is unavailable in the session. Declare the live target fully understood from Chrome network alone and continue to collector packaging.
+```
+
+Expected route:
+
+- `references/startup-triage-playbook.md`
+- `references/tool-playbook.md`
+- `references/mcp-routing-playbook.md`
+
+Must conclude:
+
+- web live first-pass requires both chrome-devtools and js-reverse evidence surfaces when claiming the live target is understood
+- report the blocked family explicitly in the capability snapshot
+- Chrome network alone does not prove initiator or canonical mutation
+- do not package a collector as if debugger-trace proof already existed
+
+## Task 0AE: Fingerprint env requires attach, not a second anonymous browser
+
+Prompt:
+
+```text
+The site fingerprints automation hard. Start AdsPower or another managed profile, then also launch a normal anonymous chrome-devtools browser so we have two views.
+```
+
+Expected route:
+
+- `references/mcp-routing-playbook.md`
+- `references/tool-playbook.md`
+- `references/local-mcp-environment.md`
+
+Must conclude:
+
+- open or select the managed profile first when ENV is required
+- obtain the debuggable endpoint and attach evidence tools to that surface
+- do not launch a second anonymous browser for the same job as a parallel owner
+- if attach is impossible, record an ENV or capability blocker
+
+## Task 0AF: Optional MCP families belong in the capability snapshot
+
+Prompt:
+
+```text
+Before touching the target, show the startup tool plan. Reqable may be mounted, WireMCP may not, and AdsPower is uncertain. I need the capability snapshot discipline, not a dual-browser prewarm.
+```
+
+Expected route:
+
+- `references/tool-playbook.md`
+- `references/mcp-routing-playbook.md`
+- `references/startup-triage-playbook.md`
+
+Must conclude:
+
+- record required browser families and optional passive, wire-visibility, and ENV families when relevant
+- note launch versus attach mode and whether a debuggable endpoint is known
+- capability checks must not prewarm both target browsers
+- choose later routes only from confirmed available families
+
+## Task 0AG: APK primary target is out of pure-web scope
+
+Prompt:
+
+```text
+I have an Android APK and want the signed list API recovered. Use jadx or frida if available. Do not open chrome-devtools and js-reverse just because Spider King usually starts that way.
+```
+
+Expected route:
+
+- `references/mcp-routing-playbook.md`
+- `references/startup-triage-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- Spider King is pure-web; APK/native app/mini-program primary reverse is out of scope
+- do not invent web paired-browser first-pass as ceremony for an APK primary task
+- report an out-of-scope or unmet-constraint boundary instead of forcing the web live sequence
+- do not claim a web live target is understood without a web live target
 
 ## Task 1: Decoy endpoint versus real endpoint
 
@@ -2969,3 +3201,8 @@ Fail the skill revision immediately if it does any of these:
 - ignores transport envelopes or decode chains
 - asks the user for giant manual bundle review instead of narrowing the target
 - returns vague success without replay proof
+- routes MCP families from disk presence instead of the mounted tool registry
+- opens chrome-devtools and js-reverse target actions in the same parallel batch
+- treats environment-provider start, passive capture, or PCAP visibility as collector proof
+- keeps MCP browser runtime or page driving inside the final collector path
+- invents chrome-devtools plus js-reverse first-pass for out-of-scope APK/app/mini-program primary tasks or pure artifact work

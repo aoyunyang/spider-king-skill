@@ -9,6 +9,8 @@ Use this file as the fast map from reverse-engineering task to tool choice.
 - [Capability-aware evidence route matrix](#capability-aware-evidence-route-matrix)
 - [Recon and network capture](#recon-and-network-capture)
 - [Capability snapshot](#capability-snapshot)
+- [Passive wire stores](#passive-wire-stores)
+- [Environment providers](#environment-providers)
 - [Browser lifecycle and handoff](#browser-lifecycle-and-handoff)
 - [Static JS analysis](#static-js-analysis)
 - [Dynamic validation](#dynamic-validation)
@@ -51,7 +53,7 @@ Treat the role definitions, evidence requirements, and fallback limits in `refer
 | `debugger-trace` | request initiators, source search/export, breakpoints, call frames, argument/return inspection, or a narrow behavior-preserving hook | wire request correlated to the smallest mutation boundary or a named capability gap |
 | `cdp-bridge` | an explicitly exposed connection with the required Network, Runtime, or Debugger domains | correlated bridge evidence saved under the current owner, or the bridge declared unavailable |
 
-Roles may hand evidence to one another; they are not choose-once routes. For a fresh `live-target`, the contractual order remains the Chrome baseline followed by `js-reverse` after the handoff gate. `fingerprint-baseline` may describe the Chrome phase when its configured mode supports that claim, `debugger-trace` commonly describes the later `js-reverse` phase, and optional `cdp-bridge` work stays under the current `TARGET_ACTIVE` owner. None of these role labels excuses either required first-pass evidence surface.
+Roles may hand evidence to one another; they are not choose-once routes. For a fresh web `live-target`, the contractual order remains `fingerprint-baseline` followed by `debugger-trace` after the handoff gate. Default baseline means are `chrome-devtools`; Camoufox/managed host may take baseline when Auto Judge finds high fingerprint pressure. `debugger-trace` commonly uses later `js-reverse`, and optional `cdp-bridge` work stays under the current `TARGET_ACTIVE` owner. None of these role labels excuses missing baseline or debugger evidence when that role is required and available means exist. That ordered pair is the required first-pass evidence surface for fresh web live targets. In default means language, keep the chrome baseline followed by `js-reverse` after the handoff gate when debugger attach exists; host upgrades change means only, never the role order or browser-free delivery rule.
 
 ## Recon and network capture
 
@@ -82,9 +84,11 @@ Before a `live-target` pass, inspect the active tool registry and record:
 - required methods that are available
 - optional methods that are available
 - selected fallback for every missing optional method
-- configured browser mode and whether it can be changed without restarting or reconfiguring the server
+- configured browser mode (`launch`, `attach`, or `unavailable`) and whether it can be changed without restarting or reconfiguring the server
+- optional non-browser families when mounted: passive wire-store, wire-visibility, environment provider
 - blockers that prevent one evidence surface from being collected
 - profile-directory conflict or other mutual-exclusion limits between browser families
+- whether a debuggable attach endpoint is already known
 
 Treat these as the core method families, not as a promise that every installation has every helper:
 
@@ -96,6 +100,30 @@ If a named optional method is missing, use the documented fallback and report th
 
 Refresh the capability snapshot after a tool-server restart or reconnect, registry or schema change, browser-mode or target-context change, control-channel disconnect, or a method result that contradicts the recorded snapshot. Stop target actions during refresh. Preserve already saved evidence, record the last explicitly confirmed lifecycle state plus the control loss, and do not infer `PARKED`, `CLOSED`, or restored ownership from reconnection alone. Re-enter through the same ownership and `sequential handoff` gates.
 
+
+## Passive wire stores
+
+Use installed passive traffic stores such as Reqable, imported HAR, or task-local `network.jsonl` as complementary wire evidence.
+
+- Search and freeze ordered HTTP or WebSocket history after a browser pass when the store is available.
+- Prefer artifact-led `evidence-reuse` when the user already provided complete captures and does not require live acceptance.
+- Correlate passive captures with browser egress; when they disagree, trust live wire egress.
+- Never treat a passive store as `TARGET_ACTIVE` ownership or as a browser-backed collector runtime.
+
+For symptom routing across MCP families, read `references/mcp-routing-playbook.md`.
+
+## Environment providers
+
+Use Camoufox, AdsPower, or other managed hosts only as environment / baseline-host providers. Auto Judge decides when they are required; do not start them by default.
+
+- Open or select a target-compatible host/profile first when fingerprint pressure or multi-profile isolation is required.
+- On high fingerprint pressure, Camoufox/managed host may own the clean `fingerprint-baseline` pass.
+- Obtain an explicit debuggable endpoint or browser URL before debugger analysis.
+- Attach `chrome-devtools` or `js-reverse` to that endpoint; do not launch a second anonymous browser for the same job while the managed host is the intended surface.
+- Host/profile start alone is not baseline proof for debugger understanding and does not replace sequential first-pass roles.
+- If attach is impossible after a clean host baseline, export artifacts and continue offline with an explicit attach gap.
+
+Portable attach defaults and placeholders live in `references/local-mcp-environment.md`; keep operator-private absolute paths and secrets in an outside-skill local overlay.
 ## Browser lifecycle and handoff
 
 ### Ownership invariant
@@ -246,6 +274,10 @@ Use the compact preload, initialized-page, hook-miss, page-owned-world, sibling-
 - local runtime timers fail after init but one getter or outgoing request boundary is visible: route to `references/challenge-artifact-harvest-playbook.md` before patching more DOM
 - hooked page fails but clean page works: suspect observer effect, remove invasive hooks, and recapture the baseline before deeper tracing
 
+- MCP family needed by the current role is not mounted in the active session: record `missing_mcp`, use only available surfaces, and stop short of claims that require the missing surface
+- managed profile started but no debuggable endpoint is available: keep ENV blocked and do not invent attach-mode evidence
+- passive wire-store is empty or offline: fall back to browser network capture or user-supplied HAR rather than assuming traffic exists
+- packet capture suggests transport failure before application semantics: route to `references/transport-pre-gate-playbook.md`; do not treat coarse PCAP success as signer recovery
 - one browser family fails to start because the other already holds the user-data directory: keep a single `TARGET_ACTIVE` family for wire evidence, mark the blocked family in the capability snapshot, and continue static recovery offline with saved sources plus local Node or Python
 - saved JS from an evaluate-style file export looks quoted or escaped end to end: decode the JSON string before analysis
 - a named national or textbook digest still mismatches fixed samples: route to `references/crypto-patterns.md` and diff IV, constants, packing, and compress masks instead of trusting the algorithm name

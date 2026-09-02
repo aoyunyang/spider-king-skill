@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import shutil
 import ast
 import hashlib
 import json
@@ -16,6 +17,9 @@ import sys
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
+
+# Prevent this validator process from writing __pycache__ into the skill package.
+sys.dont_write_bytecode = True
 
 try:
     import yaml
@@ -53,9 +57,9 @@ NEGATED_MARKER_PREFIX_RE = re.compile(
 MAX_ENTRY_NONBLANK_LINES = 280
 MAX_VALIDATION_FILE_BYTES = 16 * 1024 * 1024
 MAX_SELF_TEST_OUTPUT_BYTES = 1024 * 1024
-OFFICIAL_SUITE_TASK_COUNT = 149
+OFFICIAL_SUITE_TASK_COUNT = 160
 OFFICIAL_SUITE_CONTRACT_SHA256 = (
-    "46d5afad7dbb9acd068188f762576d81c89bf545e4b794c2feef32f4f6eea930"
+    "fb40033033ecdbaf9b78f507fce48ffa8ce78ec388e6afcbc0740e23091f6a3d"
 )
 TRUSTED_SKILL_ROOT = Path(__file__).resolve().parents[1]
 MarkerGroups = tuple[tuple[str, ...], ...]
@@ -98,10 +102,14 @@ PROFILE_FALLBACK_MARKERS = (
     "不存在时",
 )
 ROOT_SHADOW_DOCUMENTS = (
-    "README.md",
     "INSTALLATION_GUIDE.md",
     "QUICK_REFERENCE.md",
     "CHANGELOG.md",
+)
+ROOT_ALLOWED_LANDING_DOCUMENTS = (
+    "README.md",
+    "DISCLAIMER.md",
+    "LICENSE",
 )
 VALIDATION_IGNORED_DIRS = frozenset(
     {
@@ -109,7 +117,36 @@ VALIDATION_IGNORED_DIRS = frozenset(
         ".mypy_cache",
         ".pytest_cache",
         ".ruff_cache",
+        ".cache",
+        ".tox",
+        ".eggs",
+        ".hypothesis",
+        "htmlcov",
+        "node_modules",
+        ".venv",
+        "venv",
     }
+)
+GENERATED_RUNNER_DUMP_PREFIXES = ("_err_", "_out_")
+GENERATED_NOISE_FILENAMES = frozenset(
+    {
+        ".coverage",
+        ".ds_store",
+        "coverage.xml",
+        "desktop.ini",
+        "thumbs.db",
+    }
+)
+GENERATED_NOISE_SUFFIXES = (
+    ".bak",
+    ".log",
+    ".pyc",
+    ".pyd",
+    ".pyo",
+    ".swp",
+    ".swo",
+    ".temp",
+    ".tmp",
 )
 LIFECYCLE_TASKS = {
     "Task 0F: Capability checks do not prewarm both target browsers",
@@ -746,8 +783,15 @@ def validate_behavior(skill_text: str, result: Validation) -> None:
         result.require(literal in lower, message)
 
     result.require(
-        bool(re.search(r"fresh live target.*both\s+`?chrome-devtools`?\s+and\s+`?js-reverse`?", skill_text, re.I | re.S)),
-        "fresh live targets must explicitly require both first-pass tools",
+        bool(re.search(r"fresh web (?:live-)?target.*chrome-devtools.*js-reverse|Start every fresh web target classified as `live-target` with evidence from both\s+`?chrome-devtools`?\s+and\s+`?js-reverse`?", skill_text, re.I | re.S)),
+        "fresh web live targets must explicitly require both first-pass tools",
+    )
+
+    result.require(
+        ("out of scope" in lower or "out-of-scope" in lower or "pure-web" in lower)
+        and ("apk" in lower or "mini-program" in lower or "non-web" in lower)
+        and ("paired-browser" in lower or "paired browser" in lower or "ceremony" in lower),
+        "pure-web scope must refuse APK/app/mini-program paired-browser ceremony",
     )
     result.require(
         bool(re.search(r"browser automation.*(?:not|never|forbidden|unacceptable)", lower))
@@ -942,6 +986,25 @@ def validate_intake_tools_and_reporting(root: Path, result: Validation) -> None:
         "capability snapshot" in combined,
         "startup workflow must record an agent-side capability snapshot",
     )
+    mcp_path = root / "references" / "mcp-routing-playbook.md"
+    result.require(mcp_path.is_file(), "missing references/mcp-routing-playbook.md")
+    if mcp_path.is_file():
+        mcp_lower = read_text(mcp_path).lower()
+        for token, msg in (
+            ("available", "mcp routing must enforce available-only selection"),
+            ("target_active", "mcp routing must keep single TARGET_ACTIVE ownership"),
+            ("passive", "mcp routing must define passive wire stores"),
+            ("environment provider", "mcp routing must define environment providers"),
+            ("out of scope", "mcp routing must mark APK/app/mini-program primary work out of scope"),
+        ):
+            result.require(token in mcp_lower, msg)
+    result.require(
+        "web" in documents.get("maintenance", "").lower()
+        and "chrome-devtools" in documents.get("maintenance", "").lower()
+        and "js-reverse" in documents.get("maintenance", "").lower(),
+        "skill-maintenance must keep web-scoped dual first-pass wording",
+    )
+
     require_markdown_section_markers(
         startup_text,
         "Capability-aware evidence roles",
@@ -1225,17 +1288,40 @@ def validate_entry_size(skill_text: str, result: Validation, legacy: bool) -> No
     )
 
 
-def validate_directory_hygiene(root: Path, result: Validation) -> None:
+
+def is_generated_runner_dump(name: str) -> bool:
+    """Return True for external pytest/runner dump files such as _err_*.txt."""
+    lowered = name.casefold()
+    return lowered.endswith(".txt") and any(
+        lowered.startswith(prefix) for prefix in GENERATED_RUNNER_DUMP_PREFIXES
+    )
+
+
+def classify_generated_noise_file(name: str) -> str | None:
+    """Return a hygiene error label for generated local noise files, else None."""
+    lowered = name.casefold()
+    if is_generated_runner_dump(name):
+        return "generated test-runner dump"
+    if lowered in GENERATED_NOISE_FILENAMES:
+        return "generated local noise file"
+    if any(lowered.endswith(suffix) for suffix in GENERATED_NOISE_SUFFIXES):
+        return "generated local noise file"
+    if lowered.endswith("~"):
+        return "generated local noise file"
+    if lowered.endswith(".egg-info"):
+        return "generated local noise file"
+    return None
+
+
+def iter_package_hygiene_targets(root: Path) -> list[tuple[Path, str, str]]:
+    """List generated dirt under root as (path, kind, relative_posix)."""
     cache_names = {name.casefold() for name in VALIDATION_IGNORED_DIRS}
-    if root.name.casefold() in cache_names:
-        result.errors.append(
-            f"generated cache directory is not allowed in the skill package: {root.name}"
-        )
+    targets: list[tuple[Path, str, str]] = []
 
     def record_walk_error(exc: OSError) -> None:
-        result.errors.append(f"skill directory could not be inspected: {exc}")
+        raise OSError(f"skill directory could not be inspected: {exc}") from exc
 
-    for directory, child_directories, _files in os.walk(
+    for directory, child_directories, files in os.walk(
         root,
         topdown=True,
         onerror=record_walk_error,
@@ -1245,22 +1331,80 @@ def validate_directory_hygiene(root: Path, result: Validation) -> None:
         retained: list[str] = []
         for child_name in sorted(child_directories):
             child = parent / child_name
-            if child_name.casefold() in cache_names:
-                relative = child.relative_to(root).as_posix()
-                result.errors.append(
-                    "generated cache directory is not allowed in the skill package: "
-                    f"{relative}"
-                )
+            relative = child.relative_to(root).as_posix()
+            lowered = child_name.casefold()
+            if lowered in cache_names or lowered.endswith(".egg-info"):
+                targets.append((child, "generated cache directory", relative))
                 continue
             retained.append(child_name)
         child_directories[:] = retained
+        for file_name in sorted(files):
+            label = classify_generated_noise_file(file_name)
+            if label is None:
+                continue
+            path = parent / file_name
+            relative = path.relative_to(root).as_posix()
+            targets.append((path, label, relative))
+    return targets
 
-    for name in ROOT_SHADOW_DOCUMENTS:
+
+def clean_package_hygiene(root: Path) -> list[str]:
+    """Remove known generated dirt. Returns relative paths that were removed."""
+    root = root.resolve()
+    if not root.is_dir():
+        raise ValueError(f"skill root is not a directory: {root}")
+
+    targets = iter_package_hygiene_targets(root)
+    # Remove files first, then directories deepest-first.
+    files = [item for item in targets if item[0].is_file()]
+    dirs = [item for item in targets if item[0].is_dir()]
+    dirs.sort(key=lambda item: len(item[0].parts), reverse=True)
+
+    removed: list[str] = []
+    for path, _kind, relative in files + dirs:
+        if is_reparse_point(path):
+            # Never delete through reparse points / symlinks.
+            continue
+        try:
+            if path.is_dir():
+                shutil.rmtree(path)
+            elif path.exists() or path.is_symlink():
+                path.unlink()
+            else:
+                continue
+        except OSError:
+            continue
+        if not path.exists():
+            removed.append(relative)
+    return removed
+
+
+def validate_directory_hygiene(root: Path, result: Validation) -> None:
+    ignored_dir_names = {name.casefold() for name in VALIDATION_IGNORED_DIRS}
+    if root.name.casefold() in ignored_dir_names:
+        result.errors.append(
+            f"generated cache directory is not allowed in the skill package: {root.name}"
+        )
+
+    try:
+        targets = iter_package_hygiene_targets(root)
+    except OSError as exc:
+        result.errors.append(str(exc))
+        targets = []
+
+    for _path, kind, relative in targets:
+        result.errors.append(f"{kind} is not allowed in the skill package: {relative}")
+
+    scanned_names = tuple(dict.fromkeys((*ROOT_SHADOW_DOCUMENTS, *ROOT_ALLOWED_LANDING_DOCUMENTS)))
+    allowed_root_names = {name.casefold() for name in ROOT_ALLOWED_LANDING_DOCUMENTS}
+    for name in scanned_names:
         for path in sorted(root.rglob(name)):
             if is_validation_ignored(path):
                 continue
             relative = path.relative_to(root).as_posix()
             if path.parent == root:
+                if name.casefold() in allowed_root_names:
+                    continue
                 result.errors.append(
                     f"root shadow document duplicates SKILL.md or references: {name}"
                 )
@@ -1701,7 +1845,7 @@ def validate_forward_testing_contract(
         "forward-testing playbook must keep report validation read-only and model-independent",
     )
     result.require(
-        all(marker in playbook_lower for marker in ("fresh_context", "independent", "smoke", "full", "149", "full_pass")),
+        all(marker in playbook_lower for marker in ("fresh_context", "independent", "smoke", "full", "160", "full_pass")),
         "forward-testing playbook must distinguish fresh independent smoke and full evidence",
     )
     result.require(
@@ -1861,6 +2005,14 @@ def build_parser() -> argparse.ArgumentParser:
             "but are not an operating-system sandbox."
         ),
     )
+    parser.add_argument(
+        "--clean-hygiene",
+        action="store_true",
+        help=(
+            "Remove known generated cache/noise files from the skill package before validation. "
+            "Only matches package-dirt patterns; does not delete source or references."
+        ),
+    )
     return parser
 
 
@@ -1868,7 +2020,15 @@ def main() -> int:
     args = build_parser().parse_args()
     root = Path(args.root).absolute()
     result = Validation()
+    # Keep both this process and trusted self-test children from dirtying the package.
+    sys.dont_write_bytecode = True
+    os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
     try:
+        if args.clean_hygiene:
+            removed = clean_package_hygiene(root)
+            for relative in removed:
+                print(f"cleaned={relative}")
+            print(f"cleaned_count={len(removed)}")
         validate_root(
             root,
             result,

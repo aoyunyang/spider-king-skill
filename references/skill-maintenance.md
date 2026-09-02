@@ -16,7 +16,7 @@ Validate against `references/official-self-test-task-suite.md` before calling th
 Pass conditions:
 
 - the route stays protocol-first
-- every fresh target classified as `live-target` begins with `chrome-devtools` plus `js-reverse`; `artifact-only` focused routes do not invent browser evidence
+- every fresh web target classified as `live-target` begins with sequential `fingerprint-baseline` then `debugger-trace` evidence; default means are `chrome-devtools` then `js-reverse`, and the baseline host may upgrade to Camoufox or another managed profile only on proved fingerprint pressure or clean-baseline failure (never default Camoufox for ordinary low-risk work); `artifact-only` web routes do not invent browser evidence, and APK/app/mini-program primary tasks stay out of scope
 - paired evidence stays sequential: only one family owns `TARGET_ACTIVE`, and both families never appear in the same parallel tool batch
 - lifecycle wording distinguishes `PARKED` from confirmed closure and uses `RETAINED_EXCEPTION` rather than destroying unique unreplayable state
 - browser-mode and cleanup guidance reflects installed tool capabilities instead of inventing `close_browser`, headless, headful, or CloakBrowser controls
@@ -35,7 +35,10 @@ Pass conditions:
 - default validation never executes candidate scripts; use `--run-trusted-self-tests` only for the trusted current root
 - trusted self-tests recursively reject symlinks, reparse points, hard-linked dependencies, and root escapes across the full local `scripts/` tree, then terminate their process tree on timeout
 - static Python validation recursively parses every shipped `.py` file outside cache directories, including tests and reusable examples
-- generated tool caches (`.pytest_cache`, `.ruff_cache`, `.mypy_cache`, and `__pycache__`) are package errors; scanners may skip their contents only to avoid duplicate noise
+- generated tool caches (`.pytest_cache`, `.ruff_cache`, `.mypy_cache`, `__pycache__`, `.cache`, `htmlcov`, `node_modules`, venvs) are package errors; scanners may skip their contents only to avoid duplicate noise
+- generated local noise (`.pyc`, `.log`, `.tmp`, `.DS_Store`, coverage files) and test-runner dumps (`tests/_err_*.txt`, `tests/_out_*.txt`) are package errors and must stay gitignored
+- run unit tests with `PYTHONDONTWRITEBYTECODE=1` (also enforced by `tests/conftest.py`, which auto-cleans leaked cache/dumps on session finish)
+- to scrub known dirt then re-validate: `python scripts/validate_skill.py --clean-hygiene`
 - `agents/openai.yaml` parses as YAML with typed `interface` metadata, a 25-64 character short description, a `$spider-king` default prompt, and a boolean implicit-invocation policy
 - final delivery never depends on browser automation
 - final delivery is Python collector first, with JS limited to local parameter restoration only
@@ -51,7 +54,7 @@ Pass conditions:
 - reproducible evidence deposits record a normalized package path and hash, the first meaningful chain divergence when one exists, and a proof-manifest artifact hash
 - official evidence tasks route directly to `scripts/evidence_normalizer.py`, `scripts/transcript_diff.py`, and `scripts/practice_lab.py`
 - the skill-owned loopback practice lab stays a direct-HTTP fixture and does not trigger the fresh live-target browser gate
-- the entry `SKILL.md` stays lean enough to route to detailed references instead of duplicating them
+- the entry `SKILL.md` stays lean enough to route to detailed references instead of duplicating them; put new reusable knowledge only in the most specific playbook/reference
 - every Markdown reference longer than 100 logical lines retains a top-level `## Contents` section
 - every profile handoff is capability-aware: use an installed specialist when available and name an executable Spider fallback when unavailable
 - every profile-local `references/` or `scripts/` route resolves from either the profile root or the skill root
@@ -62,7 +65,7 @@ Pass conditions:
 Use `references/forward-testing-playbook.md` for the execution contract. The validator does not call a model or arbitrary command: it verifies an already-produced report, its current `SKILL.md`, package, and official-suite hashes, every response artifact, and each independent route/conclusion judgment.
 
 - `scope=smoke` may cover a deliberate subset and is reported as smoke evidence only
-- `scope=full` must contain all 149 unique official tasks before it can be reported as a full pass
+- `scope=full` must contain all 160 unique official tasks before it can be reported as a full pass
 - runner and reviewer identities must differ; both contexts must be fresh and the review must be explicitly independent
 - every route and conclusion judgment needs an exact excerpt found in the referenced response file
 - response files stay under the report directory and must not be symlinks, reparse points, hard links, or path escapes

@@ -36,6 +36,12 @@ Counterexamples constrain better when they answer four questions:
 - [Anti-pattern 21: Treat automation-browser hand-slide failures as trajectory truth](#anti-pattern-21-treat-automation-browser-hand-slide-failures-as-trajectory-truth)
 - [Anti-pattern 22: Keep tuning tracks after structure is already accepted](#anti-pattern-22-keep-tuning-tracks-after-structure-is-already-accepted)
 - [Anti-pattern 23: Call verifier-semantic success a finished collector](#anti-pattern-23-call-verifier-semantic-success-a-finished-collector)
+- [Anti-pattern 24: Call MCP families that are only on disk](#anti-pattern-24-call-mcp-families-that-are-only-on-disk)
+- [Anti-pattern 25: Force dual browser first-pass on pure artifacts](#anti-pattern-25-force-dual-browser-first-pass-on-pure-artifacts)
+- [Anti-pattern 26: Run chrome-devtools and js-reverse target actions together](#anti-pattern-26-run-chrome-devtools-and-js-reverse-target-actions-together)
+- [Anti-pattern 27: Treat environment provider start as protocol success](#anti-pattern-27-treat-environment-provider-start-as-protocol-success)
+- [Anti-pattern 28: Treat passive capture or PCAP as signer recovery](#anti-pattern-28-treat-passive-capture-or-pcap-as-signer-recovery)
+- [Anti-pattern 29: Keep MCP browser runtime inside the collector](#anti-pattern-29-keep-mcp-browser-runtime-inside-the-collector)
 - [Entry format for new anti-patterns](#entry-format-for-new-anti-patterns)
 - [Final rule](#final-rule)
 
@@ -567,6 +573,106 @@ Self-check:
 - after verifier acceptance, does the original business URL return non-challenge content through the regenerated grant?
 
 
+
+## Anti-pattern 24: Call MCP families that are only on disk
+
+Temptation:
+- a checkout or download folder contains chrome-devtools, js-reverse, reqable, or other MCP sources
+- the agent routes as though those servers are mounted
+
+Why it is false progress:
+- availability is the active session tool registry, not a directory listing
+- invented initiator or mutation claims then look complete while no tool actually ran
+
+Smallest honest next move:
+- inspect mounted tools first
+- record `missing_mcp` and fall back to available surfaces or a lower shape
+
+Self-check:
+- did the chosen MCP family appear in the live tool schema before the first target action?
+
+## Anti-pattern 25: Force dual browser first-pass on pure artifacts
+
+Temptation:
+- the user supplied HAR, request text, or a passive capture
+- both browser families are opened to satisfy live-target ceremony
+
+Why it is false progress:
+- artifact-only work must not invent browser proof
+- dual first-pass is for fresh web live targets only; APK/app/mini-program primary work is out of scope for this skill
+
+Smallest honest next move:
+- stay on `evidence-reuse` or offline routes until live acceptance is required
+- label live acceptance unproven when no browser pass was authorized
+
+Self-check:
+- would the next answer still hold if no browser MCP existed?
+
+## Anti-pattern 26: Run chrome-devtools and js-reverse target actions together
+
+Temptation:
+- open the page in both families at once to save turns
+
+Why it is false progress:
+- profile and ownership conflicts destroy clean baselines
+- initiator and wire evidence become incomparable
+
+Smallest honest next move:
+- keep one `TARGET_ACTIVE` family
+- complete sequential handoff before switching
+
+Self-check:
+- is only one browser family performing target actions in this tool batch?
+
+## Anti-pattern 27: Treat environment provider start as protocol success
+
+Temptation:
+- AdsPower or another profile manager opens cleanly
+- delivery or live understanding is declared without baseline and mutation proof
+
+Why it is false progress:
+- ENV providers only supply a surface
+- attach, baseline, mutation, and replay remain unproved
+
+Smallest honest next move:
+- obtain a debuggable endpoint
+- run chrome then js-reverse evidence under attach ownership
+
+Self-check:
+- was a business request captured and correlated after profile start?
+
+## Anti-pattern 28: Treat passive capture or PCAP as signer recovery
+
+Temptation:
+- reqable or WireMCP shows traffic, so sign reconstruction is skipped
+- a collector is declared because captures look complete
+
+Why it is false progress:
+- stores prove egress history, not local regeneration
+- PCAP visibility is not transport-profile or algorithm proof by itself
+
+Smallest honest next move:
+- extract moving fields from captures
+- rebuild offline with fixed vectors before browser-free replay
+
+Self-check:
+- can the request be regenerated without reusing the captured one-time values as hard-coded secrets?
+
+## Anti-pattern 29: Keep MCP browser runtime inside the collector
+
+Temptation:
+- Playwright, CDP page driving, or MCP browser calls remain in the final run path as a temporary fallback
+
+Why it is false progress:
+- browser-backed replay is not a protocol collector
+- delivery gates forbid browser automation as the final path
+
+Smallest honest next move:
+- demote to `evidence` or `local-proof` until pure HTTP replay works
+- remove MCP runtime imports from `main.py` / `collector/main.py`
+
+Self-check:
+- does the right-click entrypoint succeed with browser MCP servers stopped?
 ## Entry format for new anti-patterns
 
 When a shortcut recurs across more than one job, add it in this shape:

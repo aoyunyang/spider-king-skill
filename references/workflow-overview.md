@@ -1,6 +1,6 @@
 # Workflow Overview
 
-Use this file as the shortest end-to-end map for a reverse job.
+Use this file as the shortest end-to-end map for a pure-web reverse job. APK, native app, and mini-program primary reverse are out of scope for Spider King.
 
 ## Startup gate
 
@@ -8,7 +8,7 @@ Before deep work:
 
 - declare `live-target`, `artifact-only`, or `continuation`
 - check local tool sanity
-- for `live-target`, record the capability snapshot, confirm both browser tool families without opening the target in both, then assign initial `TARGET_ACTIVE` ownership to `chrome-devtools`
+- for web `live-target`, record the capability snapshot, confirm both browser tool families without opening the target in both, then assign initial `TARGET_ACTIVE` ownership to `chrome-devtools`; APK/app/mini-program primary tasks are out of scope and must not invent this paired first-pass
 - for `artifact-only`, start from the supplied files or captures and mark live acceptance as unproven
 - for `continuation`, reuse the current gate and reopen only the evidence surfaces invalidated by the new input
 - classify the target as `signer-gated`, `verifier-gated`, `decode-gated`, or `session-gated`

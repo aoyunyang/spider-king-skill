@@ -39,9 +39,9 @@ from validate_skill import (  # noqa: E402
 
 
 SCHEMA_VERSION = 1
-OFFICIAL_SUITE_TASK_COUNT = 149
+OFFICIAL_SUITE_TASK_COUNT = 160
 OFFICIAL_SUITE_CONTRACT_SHA256 = (
-    "46d5afad7dbb9acd068188f762576d81c89bf545e4b794c2feef32f4f6eea930"
+    "fb40033033ecdbaf9b78f507fce48ffa8ce78ec388e6afcbc0740e23091f6a3d"
 )
 DEFAULT_SKILL_ROOT = SCRIPT_DIR.parent
 DEFAULT_SUITE_RELATIVE_PATH = Path("references/official-self-test-task-suite.md")
@@ -55,8 +55,42 @@ MIN_EVIDENCE_QUOTE_CHARS = 12
 MIN_REVIEW_RATIONALE_CHARS = 12
 SHA256_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 PACKAGE_CACHE_DIRECTORIES = frozenset(
-    {".mypy_cache", ".pytest_cache", ".ruff_cache", "__pycache__"}
+    {
+        "__pycache__",
+        ".mypy_cache",
+        ".pytest_cache",
+        ".ruff_cache",
+        ".cache",
+        ".tox",
+        ".eggs",
+        ".hypothesis",
+        "htmlcov",
+        "node_modules",
+        ".venv",
+        "venv",
+    }
 )
+PACKAGE_NOISE_FILENAMES = frozenset(
+    {
+        ".coverage",
+        ".ds_store",
+        "coverage.xml",
+        "desktop.ini",
+        "thumbs.db",
+    }
+)
+PACKAGE_NOISE_SUFFIXES = (
+    ".bak",
+    ".log",
+    ".pyc",
+    ".pyd",
+    ".pyo",
+    ".swp",
+    ".swo",
+    ".temp",
+    ".tmp",
+)
+PACKAGE_RUNNER_DUMP_PREFIXES = ("_err_", "_out_")
 WINDOWS_RESERVED_NAMES = frozenset(
     {
         "AUX",
@@ -427,7 +461,7 @@ def _scope(
         validation.require(item_count > 0, "smoke scope requires at least one task")
         validation.require(
             item_count < OFFICIAL_SUITE_TASK_COUNT,
-            "a 149-task report must use full scope, not smoke scope",
+            "a 160-task report must use full scope, not smoke scope",
         )
     return kind or "unknown"
 
@@ -719,7 +753,10 @@ def _skill_package_digest(skill_root: Path) -> str:
         retained_directories: list[str] = []
         for child_name in sorted(child_directories):
             child = parent / child_name
-            if child_name.casefold() in PACKAGE_CACHE_DIRECTORIES:
+            lowered_child = child_name.casefold()
+            if lowered_child in PACKAGE_CACHE_DIRECTORIES or lowered_child.endswith(
+                ".egg-info"
+            ):
                 raise ForwardTestError(
                     "skill package contains a generated cache directory: "
                     f"{child.relative_to(skill_root).as_posix()}"
@@ -731,6 +768,24 @@ def _skill_package_digest(skill_root: Path) -> str:
         for file_name in sorted(file_names):
             path = parent / file_name
             relative = path.relative_to(skill_root).as_posix()
+            lowered = file_name.casefold()
+            if lowered.endswith(".txt") and any(
+                lowered.startswith(prefix) for prefix in PACKAGE_RUNNER_DUMP_PREFIXES
+            ):
+                raise ForwardTestError(
+                    "skill package contains a generated test-runner dump: "
+                    f"{relative}"
+                )
+            if (
+                lowered in PACKAGE_NOISE_FILENAMES
+                or any(lowered.endswith(suffix) for suffix in PACKAGE_NOISE_SUFFIXES)
+                or lowered.endswith("~")
+                or lowered.endswith(".egg-info")
+            ):
+                raise ForwardTestError(
+                    "skill package contains generated local noise: "
+                    f"{relative}"
+                )
             remaining = MAX_PACKAGE_BYTES - total_bytes
             if remaining < 1:
                 raise ForwardTestError(
@@ -942,7 +997,7 @@ def validate_report(
                 and scope == "full"
                 and len(items) == OFFICIAL_SUITE_TASK_COUNT
             ),
-            "full_pass may be true only for a 149-task full-scope report",
+            "full_pass may be true only for a 160-task full-scope report",
         )
 
     cases_by_heading = {case.heading: case for case in cases}
@@ -1155,7 +1210,7 @@ def run_self_test() -> None:
 
         weak_types = json.loads(json.dumps(report))
         weak_types["schema_version"] = True
-        weak_types["suite"]["task_count"] = 149.0
+        weak_types["suite"]["task_count"] = 160.0
         report_path.write_text(json.dumps(weak_types), encoding="utf-8")
         weak_type_result = validate_report(report_path, skill_root=root)
         if weak_type_result["valid"]:

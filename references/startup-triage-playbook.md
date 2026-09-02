@@ -25,10 +25,11 @@ Complete these four checks first:
 2. environment and tool sanity
    - run `scripts/check_reverse_env.py --project-root <project>` when local execution is available; fingerprint only explicitly selected public helper lockfiles with repeatable `--helper-lockfile <path>` arguments
    - treat project `.venv` coherence as advisory by default; add `--require-project-venv` only when the user or bound project makes that environment a hard gate
-   - for `live-target`, confirm whether both `chrome-devtools` and `js-reverse` are usable through schemas, tool lists, or non-target health surfaces; this capability check must not open the target in both tools
-   - record a capability snapshot: required methods present, optional methods present, selected fallbacks, configured browser mode, and blockers
-   - for `live-target`, do not place both browser tool families in one parallel tool batch
-   - for `live-target`, grant initial `TARGET_ACTIVE` ownership to `chrome-devtools`; defer the first `js-reverse` target action until the Chrome handoff gate in `references/tool-playbook.md` is complete
+   - for web `live-target`, confirm whether both `chrome-devtools` and `js-reverse` are usable through schemas, tool lists, or non-target health surfaces; this capability check must not open the target in both tools
+   - record a capability snapshot: required browser families, optional passive wire-store / wire-visibility / ENV families when relevant, required methods present, optional methods present, selected fallbacks, configured browser mode (`launch`/`attach`/`unavailable`), debuggable endpoint known or not, and blockers
+   - for web `live-target`, do not place both browser tool families in one parallel tool batch
+   - for web `live-target`, grant initial `TARGET_ACTIVE` ownership to `chrome-devtools`; defer the first `js-reverse` target action until the Chrome handoff gate in `references/tool-playbook.md` is complete
+   - if the primary target is APK, native app, or mini-program, declare out of scope for this pure-web skill; do not invent web paired-browser first-pass as ceremony
    - for `artifact-only`, inspect local runtimes and supplied files first; browsers are not a ceremonial requirement
    - for `continuation`, reuse the prior capability snapshot unless the registry, browser mode, or target context changed
    - note whether a local embedded runtime such as `iv8` is available when host-bound bootstrap is suspected
@@ -48,18 +49,20 @@ Choose an evidence role from the capability snapshot, not from a vendor label. R
 
 | Evidence role | Use it for | Minimum proof | Capability-aware limit or fallback |
 |---|---|---|---|
-| `fingerprint-baseline` | A clean flow where risk, visible interaction, renderer state, or observer effect may change the sample | untouched request and response, redirects, page state, configured browser mode, and session inventory | assign this role only to an installed target-compatible mode; if none is proved, record the role gap and keep the ordinary clean Chrome baseline honest |
+| `fingerprint-baseline` | A clean flow where risk, visible interaction, renderer state, or observer effect may change the sample | untouched request and response, redirects, page state, configured browser/host mode, and session inventory | assign this role to stock Chromium via `chrome-devtools` by default, or to Camoufox/managed host when fingerprint pressure is high; if no compatible host is proved, record the role gap and keep the ordinary clean Chrome baseline honest |
 | `debugger-trace` | Initiator, source, call-frame, argument, return-value, or canonical-mutation evidence | correlate one wire request with its caller and decisive mutation boundary | use only schema-confirmed debugger capabilities; fall back to saved source, the earliest stable breakpoint, a narrow behavior-preserving hook, or offline runtime proof |
 | `cdp-bridge` | Network, Runtime, or Debugger evidence inside an already active target-compatible environment | record how the endpoint was obtained, which protocol domains are available, and how events correlate to the baseline | optional and conditional on an explicitly exposed, authorized connection; never guess a port, profile, launch method, or MCP helper |
 
-For every fresh `live-target`, these roles supplement rather than replace the required first passes: collect the Chrome baseline, complete a `sequential handoff`, then collect `js-reverse` evidence. A typical role flow is:
+Supporting passive surfaces such as reqable, HAR, or PCAP may supply wire-store or wire-visibility evidence beside these roles. They never become a fourth concurrent browser owner and never replace the required baseline then debugger first-pass roles on a fresh web `live-target`. Read `references/mcp-routing-playbook.md` when auto-judging among artifact-only, Camoufox/managed host, chrome-devtools, and js-reverse.
+
+For every fresh web `live-target`, these roles supplement rather than replace the required first passes: collect the judged `fingerprint-baseline`, complete a `sequential handoff`, then collect `debugger-trace` evidence when attach is available. A typical role flow is:
 
 ```text
-Chrome baseline (`fingerprint-baseline` when the configured mode proves that role)
-  -> optional `cdp-bridge` while the same family remains TARGET_ACTIVE
+baseline host (`chrome-devtools` default, or Camoufox/managed host on high fingerprint pressure)
+  -> optional `cdp-bridge` while the same owner remains TARGET_ACTIVE
   -> evidence checkpoint
-  -> CHROME_PARKED or RETAINED_EXCEPTION
-  -> `js-reverse` `debugger-trace`
+  -> BASELINE_PARKED or RETAINED_EXCEPTION
+  -> `js-reverse` `debugger-trace` when debug attach exists
 ```
 
 At most one browser tool family remains `TARGET_ACTIVE`. Treat `cdp-bridge` as an evidence technique under the current owner, not a third concurrent owner. After a role returns its proof or named blocker, hand evidence to the role that can answer the next missing question; do not stay on one route merely because it was selected first. Apply the lifecycle gate in `references/tool-playbook.md` on every switch, including a return to an earlier role.
@@ -208,3 +211,4 @@ On `continuation` intake, before restarting a long reverse:
 - search the workspace for existing collectors, challenge helpers, or notes for the same host or endpoint family
 - reuse a proven pure-protocol path when the target and environment are unchanged
 - only reopen browser or deep reverse surfaces that new evidence actually invalidates
+

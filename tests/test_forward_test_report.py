@@ -180,7 +180,7 @@ class ForwardTestReportValidationTests(unittest.TestCase):
 
             self.assertTrue(result["valid"], result["errors"])
             self.assertTrue(result["full_pass"])
-            self.assertEqual(result["reported_items"], 149)
+            self.assertEqual(result["reported_items"], 160)
 
     def test_rejects_partial_full_scope_and_full_pass_claim(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -197,7 +197,7 @@ class ForwardTestReportValidationTests(unittest.TestCase):
             self.assertFalse(result["valid"])
             self.assertFalse(result["full_pass"])
             self.assertTrue(
-                any("full scope requires all 149" in error for error in result["errors"]),
+                any("full scope requires all 160" in error for error in result["errors"]),
                 result["errors"],
             )
 

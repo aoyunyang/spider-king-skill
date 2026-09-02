@@ -1,0 +1,39 @@
+# Generated / local noise - must stay out of the skill package
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.tox/
+.eggs/
+*.egg-info/
+.hypothesis/
+htmlcov/
+.coverage
+coverage.xml
+.venv/
+venv/
+node_modules/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# External pytest / runner dumps
+_err_*.txt
+_out_*.txt
+tests/_err_*.txt
+tests/_out_*.txt
+
+# Operator-private local overlays must never ship inside the shared skill package
+local-mcp-environment.local.md
+*.local.md
+spider-king.local.md

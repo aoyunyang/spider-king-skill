@@ -1,6 +1,6 @@
 ---
 name: spider-king
-description: Reverse hostile web clients into pure-protocol collectors with Python-first delivery. For a fresh live target, begin with sequential `chrome-devtools` and `js-reverse` evidence; for artifact-only input, analyze the supplied request, packet capture, JavaScript, WASM, token, or cookie sample without inventing browser proof; for a continuation, reuse the current gate when its target and environment are unchanged. Deliver a browser-free Python collector plus a tiny local helper only when needed. Use for hostile sign, token, cookie, WebSocket, GraphQL, protobuf, response-decode, browser-fingerprint, WebAssembly, challenge-bootstrap, or dynamic-font flows.
+description: "Pure-web protocol reverse skill: turn hostile browser clients into browser-free Python collectors. Auto-judge intake and tool path from signals: artifact-only first when samples suffice; for a fresh web live-target, collect sequential fingerprint-baseline then debugger-trace evidence (default chrome-devtools then js-reverse; upgrade baseline host to Camoufox/managed profile only on fingerprint pressure); for continuation, reuse the current gate when target and environment are unchanged. Route only mounted web-relevant MCP families. Out of primary scope: APK, native app, and mini-program reverse as the main path. Use for hostile web sign, token, cookie, WebSocket, GraphQL, protobuf, response-decode, browser-fingerprint, WebAssembly, challenge-bootstrap, dynamic-font, or protocol-collector flows."
 ---
 
 # Spider King
@@ -9,11 +9,12 @@ description: Reverse hostile web clients into pure-protocol collectors with Pyth
 
 Turn hostile web clients into stable protocol collectors.
 
-This is a protocol-recovery skill, not a browser-automation skill. Use browser tooling only to gather evidence. Deliver raw HTTP plus narrow local sign, bootstrap, decode, or transport helpers.
+This is a pure-web protocol-recovery skill, not a browser-automation skill and not an APK/mini-program reverse skill. Use browser tooling only to gather web evidence. Deliver raw HTTP plus narrow local sign, bootstrap, decode, or transport helpers. If the primary target is APK, native app, or mini-program, state out-of-scope instead of inventing a web dual-browser first-pass.
 
 ## Non-Negotiables
 
-- Start every fresh live target classified as `live-target` with evidence from both `chrome-devtools` and `js-reverse`. If either tool is unavailable, report the blocker before claiming the live target is understood.
+- Before any tool choice on a fresh task, run the Auto Judge Card in this file and `references/mcp-routing-playbook.md`: decide intake, whether a browser is needed, which baseline host to use, and whether `js-reverse` is required. Do not open tools first and rationalize later.
+- Start every fresh web target classified as `live-target` with sequential evidence for both roles before claiming that live web target is understood: `fingerprint-baseline` then `debugger-trace`. Default means are `chrome-devtools` then `js-reverse`. When fingerprint pressure is proved, the baseline host may be Camoufox or another managed profile; debugger-trace still prefers `js-reverse` only after a real handoff and only when a debug attach surface exists. This skill's primary scope is web clients only; APK, native app, and mini-program primary tasks are out of scope and must not invent paired-browser proof as ceremony. If a required role or its available means is missing for a web live-target, report the blocker before claiming the live target is understood.
 - Keep browser evidence collection target-serial: at most one tool family may be `TARGET_ACTIVE`, and never place both families in the same parallel tool batch. Apply the handoff gate in `references/tool-playbook.md`; preserve unique unreplayable state with `RETAINED_EXCEPTION` instead of destroying it for cleanup.
 - For `compact-replay` and `collector`, deliver a browser-free Python run path. Never use browser automation, Playwright, Selenium, CDP page-driving, page-context fetch, browser profiles, or manual browser state as the final replay path or fallback.
 - Prefer pure Python for HTTP, orchestration, parsing, retries, persistence, and output.
@@ -25,6 +26,9 @@ This is a protocol-recovery skill, not a browser-automation skill. Use browser t
 - Preserve one session chain for bootstrap-heavy flows until cross-session reuse is proven.
 - Stop only when the declared shape passes its capability-specific gate or a real external blocker is proved. Do not label `evidence` or `local-proof` as a collector, and do not disguise incomplete automation as a temporary collector.
 - `compact-replay` and `collector` delivery include a PyCharm right-click runnable Python entrypoint, normally project-root `main.py` or `collector/main.py`, with no required terminal arguments. `evidence` and `local-proof` do not require an entrypoint unless the requested artifact is executable code.
+- Route only MCP families confirmed available in the current agent tool registry or schema. Source trees on disk are not availability.
+- Passive wire stores such as Reqable or HAR may coexist with a browser `TARGET_ACTIVE` owner, but they do not replace web live first-pass evidence and must not become the final run path.
+- `compact-replay` and `collector` must remain free of MCP browser runtime, page driving, and profile-bound operation.
 
 For failure-shaped counterexamples, read `references/anti-patterns-playbook.md`. Before packaging a result, apply only the matching capability gate from `references/delivery-gate-playbook.md`.
 
@@ -59,6 +63,9 @@ Use a focused route when the goal is already narrow. Do not restart full unknown
 | Entry/call-chain location only | Dedicated reverse skill when available; else `chrome-devtools` / `js-reverse` initiator evidence |
 | Explicit Python + iv8 runtime | iv8 skill when available; if unavailable, report the unmet constraint and use env-patch/local helper only after the user accepts that substitution |
 | Confirmed CAPTCHA/TDC or family-owned protocol | Matching specialist skill when available; Spider stays secondary runtime help only |
+| Already-captured HAR, Reqable history, or request text to explain or draft replay | `evidence-reuse`; read `references/mcp-routing-playbook.md` before opening browsers |
+| Fingerprint or managed profile required before evidence | Auto-judge high fingerprint pressure -> Camoufox/managed host baseline, then attach/`js-reverse` handoff when debug endpoint exists |
+| Enough HAR/request/JS/cookie sample and no fresh live proof needed | `artifact-only` / `evidence-reuse`; do not open Camoufox, Chrome, or `js-reverse` for ceremony |
 
 Focused profile rules:
 
@@ -66,68 +73,57 @@ Focused profile rules:
 - If a profile uncovers missing bootstrap, session, transport, decode, or pagination state, exit the profile and return to the Universal Reverse Loop.
 - Process artifacts go under the executing project `js_reverse_cache/tasks/<task-id>/` (`task.json`, `network.jsonl`, `runtime-evidence.jsonl`, `handoff.json`, `fixtures/`, `report.md`). Delivery proof remains `analysis/proof_manifest.json` and related analysis files. Never write task secrets into this skill directory. Apply `references/project-artifact-contract.md` before the first save or promotion.
 
+## Auto Route Card
+
+Use this before tool choice. It does not relax any delivery gate.
+Full signal tables and host-upgrade rules live in `references/mcp-routing-playbook.md` and `references/startup-triage-playbook.md`.
+
+### Auto Judge Card (signal-driven)
+
+Judge in this order and record the branch before the first target action:
+
+1. **Intake**: enough offline samples and no live acceptance need -> `artifact-only`; bare URL or fresh page/session proof -> web `live-target`; same target/env/goal -> `continuation`; APK/app/mini-program primary -> out of scope.
+2. **Browser needed?**: pure offline explain/restore/fixed-vector work -> no browser; need current request/page/wire proof -> baseline host; known-boundary debugger only -> `js-reverse` after attach owner is confirmed.
+3. **Baseline host**: default `chrome-devtools`; upgrade to Camoufox/managed host only on fingerprint pressure or clean-baseline failure; never default Camoufox for ordinary low-risk work.
+4. **Debugger**: after a candidate business request exists and attach is available, sequential handoff to `js-reverse`; if attach is missing, export artifacts, record `debugger_attach_gap`, and continue offline.
+5. **Stop browser early**: once the real request, mutation point, and rebuild path are proved, leave browser MCP and finish in pure Python.
+
+### Default live sequence
+
+```text
+capability snapshot
+  -> Auto Judge
+  -> fingerprint-baseline (chrome-devtools default; Camoufox/managed host only on pressure)
+  -> sequential handoff
+  -> js-reverse when attach exists
+  -> offline rebuild + delivery gate
+```
+
+
 ## Startup Gate
 
-Complete and report this gate before deep analysis.
+Complete and report this gate before deep analysis. Expanded checklists stay in `references/startup-triage-playbook.md`.
 
 ### 0. Intake mode
 
 Declare one mode before tool use:
 
-- `live-target`: a current page or endpoint needs fresh browser and wire evidence; apply the paired sequential browser workflow
-- `artifact-only`: only saved requests, packet captures, source, JS, WASM, tokens, cookies, fixed vectors, or response samples are available; analyze them locally and label live acceptance, current endpoint behavior, and runtime provenance as unproven
-- `continuation`: the same target, session assumptions, tool registry, and delivery goal remain current; reuse the existing gate and reopen only evidence surfaces changed by the new input. Before reopening a long reverse, scan the workspace for an existing pure-protocol collector or challenge helper for the same target family.
-
-If the user gives both a URL and sufficient offline artifacts, treat the next step as artifact-led until live proof is explicitly needed. If the user asks only for evidence, local proof, or "do not go online", do not ask for replay budget, project root, browser approvals, or collection scope unless a gated action is the smallest next move.
+- `live-target`: current web page/endpoint needs fresh browser and wire evidence; use sequential role order
+- `artifact-only`: only saved requests/source/tokens/samples; mark live acceptance unproven
+- `continuation`: same target/env/goal; reuse the current gate and reopen only changed surfaces
 
 ### 1. Environment and tools
 
-- Run `scripts/check_reverse_env.py` when local execution is available.
-- Select browser acquisition roles from the capability-aware matrix in `references/startup-triage-playbook.md`: fingerprint baseline, debugger trace, or an approved CDP bridge. Roles may hand off sequentially; they never override the single-`TARGET_ACTIVE` rule or justify a browser-backed final path.
-- For `live-target`, confirm both `chrome-devtools` and `js-reverse` with an agent-side schema or capability check that does not open the target in both tools; record a capability snapshot of available methods and browser modes. The local Python script cannot prove MCP or plugin availability.
-- For `live-target`, start target interaction with the Chrome baseline phase. Defer the first `js-reverse` target action until the Chrome handoff gate is complete.
-- For `artifact-only`, do not start browsers merely to satisfy a live-target gate. Report which live evidence surfaces remain unavailable.
-- For `continuation`, refresh the capability snapshot only when the tool registry, browser mode, or target context changed.
-- Note whether Node, `iv8`, `curl_cffi`, curl, or another narrow local runtime is available when relevant.
+Snapshot installed MCP families, attach/debug availability, and optional passive wire stores. Route only confirmed tools. Missing optional families are gaps, not ceremony.
 
 ### 2. Family triage
 
-Choose the primary application family supported by at least two evidence surfaces:
-
-- `signer-gated`: request fields or wrappers must be regenerated.
-- `verifier-gated`: challenge, warm-up, telemetry sidecars, or verifier state gates the business request.
-  If a business JSON endpoint returns challenge HTML or linked challenge scripts, route to challenge artifact harvest and dual-writer checks before deep signer work.
-  Hard order for this family (do not skip):
-  1. freeze one full ordered transcript: init/load -> required sidecars -> final verify -> first downstream consumer
-  2. inventory sidecars and state writes
-  3. one-variable ablation matrix (omit/block/restore)
-  4. shared baseline + sparse delta consistency
-  5. real wall-clock timeline vs declared event time
-  6. platform-specific verifier semantics (not HTTP 200 alone)
-  7. first downstream consumer packaging
-  8. only then behavior/track/answer tuning
-  Hard bans before the earlier rungs pass:
-  - no trajectory or answer-parameter search before sidecar inventory and ablation
-  - no treating automation-browser hand-slide failures as algorithm failure before clean positive-sample hygiene
-  Read `references/verifier-replay-playbook.md`, `references/verifier-error-localization-playbook.md`, and `references/positive-sample-hygiene-playbook.md`.
-- `decode-gated`: HTTP succeeds but the response needs a local decode chain.
-- `session-gated`: login, pairing, counters, heartbeats, keys, transcript order, or post-login business-context activation controls success.
-
-Add `transport-gated` as a secondary tag when TLS, ALPN, HTTP version, UA family, client stack, or route-local admission fails before application semantics are visible.
-
-Read `references/startup-triage-playbook.md`. Use `references/symptom-heuristics.md` for broad symptoms, `references/pattern-atlas.md` for known shapes, and `references/doctrine-index.md` for family-level rules. If the family changes, restate the gate instead of silently drifting.
+Tag the smallest dominant gate family (`signer-gated`, `transport-gated`, `verifier-gated`, `decode-gated`, `session-gated`) from current evidence, then open only that path.
 
 ### 3. Delivery intent
 
-Declare the smallest acceptable final shape and implementation form:
+State the declared shape (`evidence`, `local-proof`, `compact-replay`, `collector`) and stop at that gate. Do not brand incomplete automation as a temporary collector.
 
-1. pure Python
-2. Python plus tiny local JS helper
-3. Python plus tiny local WASM helper
-4. Python plus local bootstrap executor
-5. Python plus local decoder
-
-Explicitly reject browser-backed replay and profile-bound operation.
 
 ## Minimal Intake
 
@@ -229,7 +225,7 @@ Do not mark complete until every gate relevant to the declared shape passes:
 
 - Startup Gate is current.
 - For live claims, the real endpoint, canonical mutation point, and moving state are proven.
-- For a fresh `live-target`, both first-pass tool evidence surfaces are recorded; `artifact-only` work states those surfaces as unproven instead of inventing them.
+- For a fresh web `live-target`, both first-pass tool evidence surfaces are recorded; `artifact-only` web work states those surfaces as unproven, and non-web primary targets are out of scope instead of inventing web browser proof.
 - Clean-baseline and observer effect risk are handled when relevant.
 - Fixed-input helper or decoder checks pass.
 - Non-empty signs, plausible token length, helper load success, one HTTP `200`, a current cookie jar, or an expired browser export are not acceptance by themselves.
@@ -257,6 +253,8 @@ Load only references that match current evidence, but keep every route directly 
 - `references/startup-triage-playbook.md`
 - `references/workflow-overview.md`
 - `references/tool-playbook.md`
+- MCP family choice and signal-driven auto-judge: read `references/mcp-routing-playbook.md` when deciding among artifact-only, Camoufox/managed host, chrome-devtools, js-reverse, passive wire stores, wire visibility, or environment providers
+- local attach ports or debug profile path issues: `references/local-mcp-environment.md`
 - `references/escalation-ladder-playbook.md`
 - `references/delivery-gate-playbook.md`
 - `references/anti-patterns-playbook.md`

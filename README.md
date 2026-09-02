@@ -1,4 +1,4 @@
-﻿# Spider King
+# Spider King
 
 <img width="1024" height="572" alt="Spider King" src="https://github.com/user-attachments/assets/a621e863-09c6-418f-a320-d453f3330f7a" />
 
@@ -6,7 +6,9 @@
 
 它的目标不是“让浏览器替你把请求点过去”，也不是“把页面里的 `fetch` 搬出来凑合跑”，而是把那些看起来依赖浏览器环境、页面上下文、挑战脚本或状态流的目标，拆回成一条可复现、可验证、可维护的本地协议链路。
 
-这套 Skill 默认面向自有系统、已授权平台、合法安全测试与教学研究场景，强调以下交付原则：
+> **Legal / 授权边界**：本仓库仅用于自有系统、已获书面授权的安全测试、互操作研究与教学。未授权抓取、绕过鉴权/风控、窃取凭据或攻击第三方系统，均不在范围内。详见 [DISCLAIMER.md](./DISCLAIMER.md)。你是操作者，自行承担守法责任。
+
+这套 Skill 默认强调以下交付原则：
 
 - 先证据，后结论
 - 必须纯协议交付
@@ -16,15 +18,15 @@
 
 ## 当前版本
 
-**Spider King 6.0**
+**Spider King 7.0**
 
-> 从“可路由的方法论知识库”，升级为“可调度作战系统 + 可执行 profile + 证据工具链 + 自测体系”。
+> 从“可调度作战系统”，升级为“先 Auto Judge、再按角色取证、只走已挂载 MCP 的协议恢复技能”。
 
 先记住三点：
 
-1. **开局更准**：先定 intake 模式和最小交付形态，不盲目全量深挖
-2. **路径更硬**：已知边界可直接走 Hook / static-ast / env-patch / pure-Python rebuild
-3. **交付更稳**：browser-free collector、固定样本验证、证据脱敏与任务产物契约成为默认要求
+1. **先判后开工具**：`artifact-only` / `live-target` / `continuation` 由信号决定，禁止先开浏览器再编理由
+2. **线上目标有硬顺序**：先 `fingerprint-baseline`，再 `debugger-trace`；默认 `chrome-devtools` → `js-reverse`
+3. **Camoufox 不是默认**：只有指纹压力被证明，或干净基线失败时，才升级 managed profile
 
 ## 核心定位
 
@@ -41,178 +43,84 @@
 
 > 它是一套把 hostile web client 还原成 stable protocol collector 的方法论与执行框架。
 
-## 6.0 更新了什么
+## 7.0 更新了什么
 
-相对 5.0，6.0 的核心变化不是“多写了几页说明”，而是把 Skill 推进成可调度、可执行、可验证的工程资产。
+相对 6.0，7.0 的核心变化不是再堆一批 profile，而是把 **MCP 选择、基线主机和调试取证** 写成不可跳过的门禁。
 
-### 1. `SKILL.md` 从说明书升级成路由器
+### 1. Auto Judge 成为开局硬规则
 
-- 明确 `Mission`：protocol recovery，不是 browser automation
-- 新增 `Lightweight Dispatch`：先选最小交付形态
-  - `evidence`
-  - `local-proof`
-  - `compact-replay`
-  - `collector`
-- 新增 `Fast Routes and Ownership`：目标已经足够窄时直接走专线
-- 新增 intake 三分法：
-  - `live-target`
-  - `artifact-only`
-  - `continuation`
-- 强化 live-target 双工具串行门禁：`chrome-devtools` 与 `js-reverse` 不得同批并行打同一目标
-- 强化能力门禁：不同交付形态走不同 verification / delivery gate
-- 强化任务产物契约：过程证据落在 `js_reverse_cache/tasks/<task-id>/`
+动手前必须先回答：
 
-### 2. 新增三大可执行 Profiles
+- 当前是 `live-target`、`artifact-only` 还是 `continuation`
+- 要不要开浏览器
+- 基线主机用 stock Chromium 还是 Camoufox / managed profile
+- 调试取证能不能上 `js-reverse`
 
-这是 6.0 最大的能力跃迁：
+样本已经够、不需要新鲜 live 接受时，走 `artifact-only`，禁止为了仪式感打开 Chrome / Camoufox / `js-reverse`。
 
-| Profile | 用途 |
-|---|---|
-| `references/profiles/browser-hook-snippets/` | paste-ready cookie / crypto / storage / xhr-fetch 观察 Hook |
-| `references/profiles/static-ast/` | 结构化 Babel AST 恢复与安全改写 |
-| `references/profiles/env-patch/` | 已知入口 + 固定输出的 Node/VM 补环境复现 |
+### 2. live-target 的硬顺序 W1
 
-### 3. 新增一批实战痛点 Playbook
-
-本包当前根 playbook 约 **57** 本，6.0 重点补强包括：
-
-- `pure-python-rebuild-playbook.md`
-- `opaque-runtime-profile-playbook.md`
-- `native-transport-profile-playbook.md`
-- `local-challenge-executor-playbook.md`
-- `multi-context-session-playbook.md`
-- `async-export-job-playbook.md`
-- `dual-writer-param-playbook.md`
-- `case-reuse-playbook.md`
-- `reproducible-evidence-playbook.md`
-- `project-artifact-contract.md`
-- `provider-work-order.md`
-- `forward-testing-playbook.md`
-- `positive-sample-hygiene-playbook.md`
-- `specialist-handoff-contract.md`
-- `verifier-error-localization-playbook.md`
-- `experience-card-schema.md`
-
-### 4. 工具链从“辅助脚本”升级为“证据工程”
-
-当前 `scripts/` 主要包括：
-
-- `check_reverse_env.py`：环境体检
-- `crypto_fingerprint.py`：摘要 / 编码指纹初判
-- `protocol_diff.py`：请求响应差异筛查
-- `scaffold_reverse_project.py`：Python-first 项目脚手架
-- `evidence_normalizer.py`：HAR / transcript 归一化与脱敏
-- `transcript_diff.py`：协议链首分歧定位
-- `transform_trace_diff.py`：变换轨迹 diff
-- `transport_profile_diff.py`：TLS / ALPN / HTTP2 画像 diff
-- `forward_test_report.py`：前向验证报告
-- `grpc_frame_inspector.py`：gRPC / 帧结构检查
-- `practice_lab.py`：本地敌意协议演练
-- `validate_skill.py`：技能结构与行为守恒校验
-
-并配套完整 `tests/`，让 Skill 本身可回归。
-
-### 5. 可回归样例与自测体系
-
-- 示例：`references/examples/douyin-bdms-pure/`
-- 官方自测：`references/official-self-test-task-suite.md`
-- 维护规范：`references/skill-maintenance.md`
-- 发布前建议至少跑：
-
-```bash
-python scripts/check_reverse_env.py
-python scripts/validate_skill.py
+```text
+capability snapshot
+  -> Auto Judge
+  -> fingerprint-baseline（默认 chrome-devtools）
+  -> debugger-trace（默认 js-reverse，需要 debug attach）
+  -> 离线重建 / Python collector
 ```
 
-### 6. 当前包体量
+- 同一时刻最多一个 `TARGET_ACTIVE` 浏览器族
+- 两套浏览器不得同批并行打同一目标
+- 基线成功但没有 attach 面：导出产物，记录 `debugger_attach_gap`，转离线
+- APK / 原生 App / 小程序主任务直接 out-of-scope，不编造双浏览器仪式
+
+完整路由表见 `references/mcp-routing-playbook.md`。
+
+### 3. 新增 MCP 与本机环境文档
+
+| 文件 | 用途 |
+|---|---|
+| `references/mcp-routing-playbook.md` | 把已挂载 MCP 映射到 intake / 证据角色 / 基线主机；未挂载的不当成可用 |
+| `references/local-mcp-environment.md` | 本机 attach / 端口 / host 占位说明；私人路径和密钥不得进仓库 |
+
+Camoufox 只是 **baseline host / ENV surface**，不是 `js-reverse` 替代品，更不是 collector 运行时。
+
+### 4. 测试卫生与发布包更干净
+
+- 恢复 `.gitignore`
+- 新增 `pytest.ini`：`-p no:cacheprovider`
+- 新增 `tests/conftest.py`：禁止字节码，清理 `__pycache__` / pytest 缓存 / runner dump
+- 共享包只放机器无关默认值；`*.local.md` 必须留在 skill 树外
+
+### 5. 6.0 能力全部保留
+
+7.0 没有拆掉 6.0 的执行资产，继续包含：
+
+- 三大可执行 profile：`browser-hook-snippets` / `static-ast` / `env-patch`
+- 证据工具链与 `validate_skill.py`
+- 官方自测套件与 forward-testing
+
+## 6.0 留下的底座
+
+6.0 把 Skill 从说明书推进成可调度、可执行、可验证的工程资产。7.0 默认继承这些能力：
+
+- `Lightweight Dispatch`：`evidence` / `local-proof` / `compact-replay` / `collector`
+- Fast Routes：已知边界直接走 Hook / AST / env-patch / pure-Python rebuild
+- 任务产物契约：过程证据落在项目 `js_reverse_cache/tasks/<task-id>/`
+- browser-free collector、固定样本验证、证据脱敏
+
+## 当前包体量
 
 基于本仓库实际内容：
 
 - 有效文件约 **169**
-- 内容体积约 **1.7 MB**
-- 根 playbook 约 **57**
+- 根 playbook 约 **59**
 - 可执行 profile：**3** 套
 - 脚本约 **13**
 - 测试覆盖环境检查、证据归一化、脚手架、协议工具、validate_skill 等
 
-## 6.0 强在哪里
-
-### 强项 1：开局不再乱
-
-6.0 强制先回答三个问题：
-
-1. 现在是 `live-target`、`artifact-only` 还是 `continuation`
-2. 最小交付是证据、本地证明、单点重放，还是完整 collector
-3. 当前能力 owner 是 recon、hook、static-ast、env-patch、transport，还是 pure rebuild
-
-这会显著减少：
-
-- 明明只有 HAR 却去开浏览器
-- 明明只是已知 hook 边界却重开全量侦察
-- 还没证明真实请求就先写大而全采集器
-
-### 强项 2：已知边界路径真正可用
-
-| 场景 | 6.0 路径 |
-|---|---|
-| 已知 mutation 边界 | browser-hook-snippets |
-| 需要结构化还原 JS | static-ast |
-| 已知入口与固定输出 | env-patch |
-| 固定轨迹 signer/decoder | pure-Python rebuild |
-
-5.0 更多是“告诉你应该怎么做”；6.0 在这些场景已经能直接上手。
-
-### 强项 3：更能拆“浏览器专属假象”
-
-6.0 对下面这些失败面处理更完整：
-
-- 不透明多阶段签名 / 打包
-- 传输层先准入，应用层还没开始
-- 本地挑战执行器可恢复 artifact，但 Python 仍负责 live HTTP
-- 登录成功后业务上下文仍未激活
-- 异步导出、双写参数、会话链污染
-- 正向验证与样本卫生
-
-### 强项 4：证据和交付更像工程
-
-默认要求：
-
-- 固定输入 / 固定输出
-- 首分歧点可定位
-- 敏感值脱敏
-- 任务产物目录契约
-- right-click 可运行的 `main.py`
-- browser-free 与 runtime-free 边界必须说清
-- `evidence` / `local-proof` 不再被误标成 collector
-
-### 强项 5：Skill 本身开始可自检
-
-- `validate_skill.py`
-- 官方自测任务套件
-- practice lab
-- 多模块单元测试
-
-### 相对 5.0 的务实判断
-
-| 场景 | 提升 |
-|---|---|
-| 通用协议恢复主循环 | 中幅更稳 |
-| 已知边界 Hook 取证 | 大幅提升 |
-| static-ast 结构化恢复 | 大幅提升 |
-| env-patch / 本地跑 signer | 大幅提升 |
-| 固定轨迹纯 Python 重写 | 大幅提升 |
-| 传输画像 / transport gate | 大幅提升 |
-| 多业务上下文会话 | 大幅提升 |
-| 证据标准化、前向验证、回归 | 大幅提升 |
-
-综合体感：
-
-- 平均任务效率 / 完成质量：约 **1.5×–2×**
-- 在 hook / static-ast / env-patch / opaque signer / transport 场景：常见接近 **2×+**
-
 ## 核心能力
 
-当前版本围绕 `chrome-devtools` 与 `js-reverse` 展开，强调轻量双工具侦察、离线还原和 Python-first 交付。
+当前版本围绕 `chrome-devtools` 与 `js-reverse` 展开，强调 Auto Judge、轻量串行侦察、离线还原和 Python-first 交付。
 
 主要能力包括：
 
@@ -231,8 +139,8 @@ python scripts/validate_skill.py
 
 最短主线：
 
-1. 完成 `Startup Gate`
-2. 按 intake 模式选择最小路径；`live-target` 用串行 paired pass
+1. 完成 Auto Judge + `Startup Gate`
+2. 按 intake 选择最小路径；`live-target` 先基线后调试
 3. 找到真实请求与真实动态状态
 4. 在本地离线重建这些动态状态
 5. 交付脱离浏览器运行的 Python collector
@@ -240,7 +148,7 @@ python scripts/validate_skill.py
 ### 1. Startup Gate
 
 - 声明 intake 模式：`live-target` / `artifact-only` / `continuation`
-- 检查环境与工具
+- 检查环境与**当前会话真正挂载**的 MCP
 - 做目标家族分流
 - 声明最终交付意图
 
@@ -252,18 +160,19 @@ python scripts/validate_skill.py
 - `session-gated`
 - 必要时补充 `transport-gated`
 
-### 2. 轻量双工具侦察
+### 2. 轻量双角色侦察
 
 fresh `live-target`：
 
-- `chrome-devtools`：页面状态、跳转链、首轮网络视图
-- `js-reverse`：initiator、源码搜索、wrapper 与 mutation 假设
+- `fingerprint-baseline` / `chrome-devtools`：页面状态、跳转链、首轮网络视图
+- `debugger-trace` / `js-reverse`：initiator、源码搜索、wrapper 与 mutation 假设
 
 强调：
 
 - 轻量优先
 - 串行保护易失状态
 - 已有 HAR / 抓包 / 固定向量时优先 `artifact-only`
+- 默认不用 Camoufox
 
 ### 3. 识别真实动态状态
 
@@ -306,7 +215,10 @@ fresh `live-target`：
 ```text
 spider-king/
 ├── README.md
+├── DISCLAIMER.md
+├── LICENSE
 ├── SKILL.md
+├── pytest.ini
 ├── agents/
 │   └── openai.yaml
 ├── scripts/
@@ -324,13 +236,10 @@ spider-king/
 │   └── validate_skill.py
 ├── tests/
 └── references/
+    ├── mcp-routing-playbook.md
+    ├── local-mcp-environment.md
     ├── doctrine-index.md
-    ├── symptom-heuristics.md
-    ├── pattern-atlas.md
-    ├── pure-python-rebuild-playbook.md
-    ├── opaque-runtime-profile-playbook.md
-    ├── native-transport-profile-playbook.md
-    ├── multi-context-session-playbook.md
+    ├── startup-triage-playbook.md
     ├── official-self-test-task-suite.md
     ├── examples/
     │   └── douyin-bdms-pure/
@@ -345,35 +254,37 @@ spider-king/
 第一次建议按这个顺序读：
 
 1. `SKILL.md`
-2. `references/workflow-overview.md`
+2. `references/mcp-routing-playbook.md`
 3. `references/startup-triage-playbook.md`
-4. `references/doctrine-index.md`
-5. `references/pattern-atlas.md`
+4. `references/workflow-overview.md`
+5. `references/doctrine-index.md`
 6. `references/official-self-test-task-suite.md`
 
 按场景跳转：
 
+- MCP / 基线主机选择：`mcp-routing-playbook.md`
+- 本机 attach 占位：`local-mcp-environment.md`
 - 已知边界贴 Hook：`profiles/browser-hook-snippets/index.md`
 - 结构化还原 JS：`profiles/static-ast/index.md`
 - 本地补环境：`profiles/env-patch/index.md`
 - 固定轨迹纯 Python 重写：`pure-python-rebuild-playbook.md`
 - 不透明多阶段签名：`opaque-runtime-profile-playbook.md`
 - 传输准入：`transport-pre-gate-playbook.md`
-- 原生传输画像：`native-transport-profile-playbook.md`
-- 登录成功但业务上下文不对：`multi-context-session-playbook.md`
-- 本地挑战执行器：`local-challenge-executor-playbook.md`
 - 前向验证：`forward-testing-playbook.md`
-- 样本卫生：`positive-sample-hygiene-playbook.md`
 - 伪完成排查：`anti-patterns-playbook.md`
 - 技能维护：`skill-maintenance.md`
 
 ## 安装方式
 
 ```bash
-git clone <your-repo-url> ~/.codex/skills/spider-king
+git clone https://github.com/aoyunyang/spider-king-skill.git ~/.codex/skills/spider-king
 ```
 
-或直接把本目录放到支持 `SKILL.md` 自动加载的 skills 路径下。
+Windows 也可放到：
+
+```text
+%USERPROFILE%\.codex\skills\spider-king
+```
 
 安装后建议：
 
@@ -395,6 +306,7 @@ python scripts/validate_skill.py
 - 需求本质只是标准 UI 自动化
 - 只要求一次性浏览器脚本，不关心协议可复现性
 - 最终交付允许长期依赖浏览器 profile 或人工点击
+- 主目标是 APK / 原生 App / 小程序
 - 不具备合法授权边界
 
 ## 交付标准
@@ -419,14 +331,14 @@ python scripts/validate_skill.py
 - browser-free / runtime-free 边界说清
 - 敏感值未进入公开日志或版本控制
 
-## 从 5.0 升级到 6.0
+## 从 6.0 升级到 7.0
 
-- 主方法论兼容，不必推翻重学
-- 开局请优先遵循 6.0 的 intake / dispatch / fast route
-- 有 HAR、抓包、固定向量时，优先 `artifact-only`
-- 已知边界优先走 profile，不要每次从零侦察
+- 主方法论兼容，profile 和证据工具链继续用
+- 开局先读 `SKILL.md` 的 Auto Judge 与 `mcp-routing-playbook.md`
+- 低风险 live-target 默认 `chrome-devtools`，不要一上来开 Camoufox
+- 只路由当前会话已挂载的 MCP，磁盘上有源码不等于可用
+- 私人端口、profile 路径、API key 写到 skill 树外的 `*.local.md`
 - 发布或大改后至少跑 `validate_skill.py`
-- 新项目请遵守 `project-artifact-contract.md`，不要把任务秘密写进 skill 目录
 
 ## 一句话总结
 
@@ -434,4 +346,4 @@ python scripts/validate_skill.py
 
 它是让你把浏览器里看起来神秘、脆弱、依赖上下文的行为，拆回成一条可验证、可复现、可长期运行的本地协议链路。
 
-**6.0 的强点，在于把这套能力从“会讲”，推进到了“会调度、会执行、会验证、会维护”。**
+**7.0 的强点，在于把工具选择从“先打开再解释”，推进到了“先判定、再按角色取证、只走已挂载能力”。**
