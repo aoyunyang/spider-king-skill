@@ -102,10 +102,12 @@ PROFILE_FALLBACK_MARKERS = (
     "不存在时",
 )
 ROOT_SHADOW_DOCUMENTS = (
-    "README.md",
     "INSTALLATION_GUIDE.md",
     "QUICK_REFERENCE.md",
     "CHANGELOG.md",
+)
+ROOT_LANDING_DOCUMENTS = (
+    "README.md",
 )
 VALIDATION_IGNORED_DIRS = frozenset(
     {
@@ -1555,9 +1557,11 @@ def validate_directory_hygiene(root: Path, result: Validation) -> None:
     for _path, kind, relative in targets:
         result.errors.append(f"{kind} is not allowed in the skill package: {relative}")
 
-    for name in ROOT_SHADOW_DOCUMENTS:
+    for name in (*ROOT_SHADOW_DOCUMENTS, *ROOT_LANDING_DOCUMENTS):
         for path in sorted(root.rglob(name)):
             if is_validation_ignored(path):
+                continue
+            if name in ROOT_LANDING_DOCUMENTS and path.parent == root:
                 continue
             relative = path.relative_to(root).as_posix()
             if path.parent == root:

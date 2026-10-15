@@ -516,18 +516,15 @@ class DirectoryHygieneValidationTests(unittest.TestCase):
 
             self.assertEqual(result.errors, [])
 
-    def test_rejects_root_readme_shadow_document(self) -> None:
+    def test_allows_root_readme_landing_document(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "README.md").write_text("# Duplicate\n", encoding="utf-8")
+            (root / "README.md").write_text("# Spider King\n", encoding="utf-8")
             result = validate_skill.Validation()
 
             validate_skill.validate_directory_hygiene(root, result)
 
-            self.assertTrue(
-                any("root shadow document" in error for error in result.errors),
-                result.errors,
-            )
+            self.assertEqual(result.errors, [])
 
     def test_rejects_nested_readme_auxiliary_document(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
