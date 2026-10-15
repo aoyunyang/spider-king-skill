@@ -144,6 +144,7 @@ For the generic "do not jump layers" rule across the whole skill, also read `ref
 - using one JS engine version for diagnostics and another for the shipped helper without rerunning fixed-input parity checks
 - feeding the wrong UA version and then blaming crypto for an ordering mismatch
 - using full page bootstrap when plain DOM parsing would do
+- assuming iframe `srcdoc` or `document.write` executes inline scripts; prove `contentDocument.scripts.length` and `contentWindow.location` (`about:blank` vs `about:srcdoc`) before treating the inner VM as running
 - downloading linked bootstrap assets out of band with a different session, origin, or header profile than the entry chain
 - treating a business-response challenge tuple as proof you found the wrong endpoint when the same route may simply need local refresh and retry
 - treating failure under Node, jsdom, or a thin shim as proof the VM cannot run in a closer local engine or embedded host

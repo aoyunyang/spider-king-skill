@@ -38,13 +38,24 @@ Transport shape is part of the protocol contract.
 
 - fingerprint message types before reading individual frames
 - identify auth frames, subscribe frames, heartbeat frames, and business frames
+- classify inbound text before JSON parse; a short constant prefix, ack, or heartbeat is not the business object
+- skip non-object text and keep reading until the business JSON object
+- one recv after send that lands on the prefix is not proof the socket cannot multiplex
+- do not sum a constant prefix frame and do not treat JSON.parse failure of that frame as a missing signer
 - preserve ordering when the server expects a warm-up sequence
+- freeze handshake header class separately from token bytes
+- impersonate default document headers include `Sec-Fetch-Mode: navigate`; do not copy them onto a WebSocket handshake
+- ablate handshake header class on the same admitted token bytes before restarting the signer
+- a close after the first business text is reject; an empty open is not accept
 
 ## Binary envelope notes
 
-- freeze raw bytes
+- freeze raw bytes as hex or ArrayBuffer at the serializer or XHR send, not as a UTF-8 MCP or DevTools dump
 - identify field boundaries or parser functions
 - confirm whether compression happens before structured decode
+- `U+FFFD` in a saved body means the dump corrupted binary; recapture hex
+- regenerate clock-bucket protobuf fields through the public encoder; a second int32 may be client-chosen if the token remains `encode(t1,t2)` and `t1` is fresh
+- stale captured clock-bucket plus token pairs 403 even when the schema is right
 
 ## gRPC and grpc-web framing
 

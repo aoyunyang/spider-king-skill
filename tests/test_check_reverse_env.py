@@ -592,3 +592,30 @@ def test_invalid_project_root_is_a_bounded_cli_error(tmp_path: Path) -> None:
     )
     assert str(tmp_path) not in completed.stderr
     assert "Traceback" not in completed.stderr
+
+
+def test_desktop_chrome_impersonate_selector_ignores_android_and_picks_max() -> None:
+    assert environment_check._desktop_chrome_impersonate_major("chrome146") == 146
+    assert environment_check._desktop_chrome_impersonate_major("chrome133a") == 133
+    assert environment_check._desktop_chrome_impersonate_major("chrome131_android") is None
+    assert (
+        environment_check._max_desktop_chrome_impersonate(
+            ["chrome136", "chrome146", "chrome131_android", "chrome133a"]
+        )
+        == "chrome146"
+    )
+
+
+def test_reports_curl_cffi_chrome_impersonate_profile(tmp_path: Path) -> None:
+    project_root = tmp_path / "project"
+    project_root.mkdir()
+    completed = run_check("--project-root", str(project_root))
+
+    assert completed.returncode == 0, completed.stderr or completed.stdout
+    assert "- curl_cffi_chrome_impersonate:" in completed.stdout
+    profile = environment_check.curl_cffi_chrome_impersonate_profile()
+    if environment_check.module_status("curl_cffi") == "available":
+        assert "default=" in profile
+        assert "max=" in profile
+    else:
+        assert profile == "missing"

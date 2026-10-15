@@ -13,6 +13,7 @@ code table into universal doctrine.
 - [Task-local map template](#task-local-map-template)
 - [Diagnostic order](#diagnostic-order)
 - [Anti-cargo-cult rules](#anti-cargo-cult-rules)
+- [Collect-blob necessity](#collect-blob-necessity)
 - [Handoff](#handoff)
 
 ## Goal
@@ -129,12 +130,29 @@ structure
 
 Stop at the first surface that controllably reproduces the reject family.
 
+When rejects cluster around captcha/device companions, run the device-trust sidecar ablations in `references/device-trust-sidecar-playbook.md` before track cosmetics:
+block/repost companion, same-body rebuild, skip-first SDK call, official apply of local Init, session-fresh emit, then track.
+
 ## Anti-cargo-cult rules
 
 - do not hardcode another job's reject codes as universal truth
 - do not treat HTTP 200 or a generic success envelope as acceptance
 - do not continue trajectory search while structure or sidecar necessity is unknown
 - do not call helper load success an oracle
+- do not reverse a collect or behavior blob before proving the current verifier consumes it
+- do not treat unused challenge issuance and submitted-wrong answers as the same miss class
+- do not read accept cumulative pass-rate and reject closeness through one field as if they were one metric
+
+## Collect-blob necessity
+
+Before opening collect, track, or environment reverse on a slider or similar gate:
+
+1. send the current-round required sidecars with a minimal or dummy collect blob
+2. compare that result with a real collect blob on the same session chain
+3. if dummy collect plus the cheap required oracles (POW, visual answer, page-bound token) already grants, record weak enforcement for this gate
+4. do not promote that tolerance into "collect never matters"
+
+Visual oracles and cheap POW remain their own surfaces. Dummy acceptance is route-tolerance evidence, not permission to delete the field from the model.
 
 ## Handoff
 

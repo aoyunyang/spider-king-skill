@@ -50,17 +50,18 @@ Treat the role definitions, evidence requirements, and fallback limits in `refer
 | Evidence role | Useful confirmed capabilities | Transition signal |
 |---|---|---|
 | `fingerprint-baseline` | a target-compatible configured browser mode, wire capture, redirects, page snapshots, and session inspection | clean baseline saved and observer-effect risk bounded |
-| `debugger-trace` | request initiators, source search/export, breakpoints, call frames, argument/return inspection, or a narrow behavior-preserving hook | wire request correlated to the smallest mutation boundary or a named capability gap |
+| `debugger-trace` | request initiators, source search/export, breakpoints, call frames, argument/return inspection, a narrow behavior-preserving hook, and/or first-class means `silent-value-capture` for low-observer boundary values | role complete when wire is correlated to the smallest mutation boundary and/or a `fixed_input_ready` silent-value card; named gaps alone do not complete the role |
 | `cdp-bridge` | an explicitly exposed connection with the required Network, Runtime, or Debugger domains | correlated bridge evidence saved under the current owner, or the bridge declared unavailable |
 
-Roles may hand evidence to one another; they are not choose-once routes. For a fresh web `live-target`, the contractual order remains `fingerprint-baseline` followed by `debugger-trace` after the handoff gate. Default baseline means are `chrome-devtools`; Camoufox/managed host may take baseline when Auto Judge finds high fingerprint pressure. `debugger-trace` commonly uses later `js-reverse`, and optional `cdp-bridge` work stays under the current `TARGET_ACTIVE` owner. None of these role labels excuses missing baseline or debugger evidence when that role is required and available means exist. That ordered pair is the required first-pass evidence surface for fresh web live targets. In default means language, keep the chrome baseline followed by `js-reverse` after the handoff gate when debugger attach exists; host upgrades change means only, never the role order or browser-free delivery rule.
+Roles may hand evidence to one another; they are not choose-once routes. For a fresh web `live-target`, the contractual order remains `fingerprint-baseline` followed by `debugger-trace` after the handoff gate. Default baseline means are `chrome-devtools`; Camoufox/managed host may take baseline when Auto Judge finds high fingerprint pressure. `debugger-trace` defaults to `js-reverse` when attach exists; `silent-value-capture` is a first-class means on upgrade triggers or when attach is missing but a backend is available (`references/silent-value-capture-playbook.md`). Optional `cdp-bridge` work stays under the current `TARGET_ACTIVE` owner. None of these role labels excuses missing baseline or debugger-trace evidence when that role is required and any available means exist. That ordered pair is the required first-pass evidence surface for fresh web page/runtime understanding. The narrowly endpoint-scoped transport-only exception is defined only in `references/startup-triage-playbook.md`; it keeps role gaps explicit and does not claim page/runtime understanding. In default means language, keep the chrome baseline followed by `js-reverse` after the handoff gate when debugger attach exists; host or capture-backend choice changes means only, never the role order or browser-free delivery rule. If DP/initiator work is already required, `js-reverse` may own both roles on one host; do not launch `chrome-devtools` as a second browser, and do not treat `launch` as `attach`.
 
 ## Recon and network capture
 
 ### `js-reverse`
 
-- `new_page` / `navigate_page`: open the target and follow the real landing URL
-- `list_network_requests`: list XHR, Fetch, document, script, and preflight traffic
+- `select_page` / attach when available: use the current `TARGET_ACTIVE` page or known debug endpoint when DP is requested; do not launch a second Chrome
+- `new_page` / `navigate_page`: open the target only when this family already owns the host or no host exists
+- `list_network_requests`: list XHR, Fetch, document, script, and preflight traffic; WebSocket frames are `get_websocket_messages`, not this list
 - `list_network_requests(reqid=...)`: inspect the chosen request in full
 - `get_request_initiator`: jump from request back to the caller stack
 - `get_websocket_messages(analyze=true)`: group streaming traffic by message family
@@ -69,13 +70,14 @@ Roles may hand evidence to one another; they are not choose-once routes. For a f
 
 ### `chrome-devtools`
 
-- `navigate_page` / `new_page`: open the page when UI flow evidence matters
+- `navigate_page` / `new_page`: open the page when UI flow evidence matters and this family is the single owner
+- Do not `new_page` a chrome-devtools Chrome because the user asked to open DP; that request is `js-reverse` on the current host
 - `take_snapshot`: inspect page structure fast
 - `wait_for`: wait on target text while triggering filters, search, or pagination
-- `list_network_requests` and `get_network_request`: second source of truth when UI flow matters
+- `list_network_requests` and `get_network_request`: HTTP document/XHR/fetch/script inventory only; this family does not list WebSocket frames. Empty XHR plus filled DOM after HTML zeros still needs a WebSocket constructor hook or `js-reverse` `get_websocket_messages`. Do not parse protobuf from a UTF-8-saved body that contains `U+FFFD`
 - `take_screenshot`: capture evidence for hidden panels, captcha gates, or lazy regions
 
-Use browser DevTools when DOM state matters. Use `js-reverse` when JavaScript runtime, request initiators, or hooks matter.
+Use browser DevTools when DOM state matters. Use `js-reverse` when JavaScript runtime, request initiators, or hooks matter. If DP/initiator work is already required, `js-reverse` may collect the clean baseline and the debugger-trace on one host; do not launch `chrome-devtools` as a second browser.
 
 ## Capability snapshot
 
@@ -85,10 +87,12 @@ Before a `live-target` pass, inspect the active tool registry and record:
 - optional methods that are available
 - selected fallback for every missing optional method
 - configured browser mode (`launch`, `attach`, or `unavailable`) and whether it can be changed without restarting or reconfiguring the server
+- installed curl impersonate max chrome from `scripts/check_reverse_env.py` (`curl_cffi_chrome_impersonate`)
 - optional non-browser families when mounted: passive wire-store, wire-visibility, environment provider
 - blockers that prevent one evidence surface from being collected
 - profile-directory conflict or other mutual-exclusion limits between browser families
 - whether a debuggable attach endpoint is already known
+- never record `attach` unless the current tool mode or a live debug endpoint actually supports it
 
 Treat these as the core method families, not as a promise that every installation has every helper:
 
@@ -120,6 +124,7 @@ Use Camoufox, AdsPower, or other managed hosts only as environment / baseline-ho
 - On high fingerprint pressure, Camoufox/managed host may own the clean `fingerprint-baseline` pass.
 - Obtain an explicit debuggable endpoint or browser URL before debugger analysis.
 - Attach `chrome-devtools` or `js-reverse` to that endpoint; do not launch a second anonymous browser for the same job while the managed host is the intended surface.
+- Opening DP means attach/select on that same host. A `launch`-only MCP is recorded as `launch`, not treated as a clean user Chrome.
 - Host/profile start alone is not baseline proof for debugger understanding and does not replace sequential first-pass roles.
 - If attach is impossible after a clean host baseline, export artifacts and continue offline with an explicit attach gap.
 
@@ -128,7 +133,7 @@ Portable attach defaults and placeholders live in `references/local-mcp-environm
 
 ### Ownership invariant
 
-- At most one browser tool family may be `TARGET_ACTIVE` at a time.
+- At most one browser tool family or silent-value engine-capture backend may be `TARGET_ACTIVE` at a time. Park or retain baseline before granting engine-capture ownership.
 - Never place `chrome-devtools` and `js-reverse` target actions in the same parallel tool batch.
 - A schema, tool-list, or non-target health check may confirm availability without taking target ownership. Capability checks must not prewarm both target browsers.
 - A parked MCP server or browser process may remain alive. Process presence is not the same as target-active ownership.
@@ -141,6 +146,11 @@ IDLE
   -> CHROME_PARKED or RETAINED_EXCEPTION
   -> JS_REVERSE_ACTIVE
   -> JS_REVERSE_PARKED or MCP_PROCESS_ENDED
+
+When DP/initiator work is already required:
+IDLE
+  -> JS_REVERSE_ACTIVE (owns fingerprint-baseline + debugger-trace)
+  -> do not open CHROME_ACTIVE for the same job
 ```
 
 Use `CLOSED` only when the installed tool explicitly confirms browser or MCP-process termination. Never infer closure from a blank page, a missing tab, an idle tool call, or the end of one analysis phase.
@@ -153,7 +163,7 @@ Before switching tool families:
 2. record whether the current session, verifier round, in-memory secret, manual interaction, or challenge state is replayable
 3. remove or disable invasive instrumentation when supported, and resume a paused runtime before parking it
 4. quiesce target activity as far as the installed tool allows
-5. record the resulting lifecycle state and only then grant `TARGET_ACTIVE` ownership to the next family
+5. record the resulting lifecycle state and only then grant `TARGET_ACTIVE` ownership to the next family. If `js-reverse` already owns both live roles because DP/initiator work was required at intake, skip this family switch; attach/select the current page and do not grant `chrome-devtools` ownership
 
 Evidence roles can switch at this checkpoint. The role selected first does not own the investigation to completion; transfer the saved baseline, request identifiers, source coordinates, and state inventory to whichever role answers the next unresolved question.
 
@@ -236,6 +246,19 @@ Start with a clean baseline. Then use initiator stacks and request diffs. Add ru
 
 Use the compact preload, initialized-page, hook-miss, page-owned-world, sibling-transport, and disconnect recovery matrix in `references/hook-techniques.md` before widening instrumentation.
 
+### Silent value capture
+
+Use `references/silent-value-capture-playbook.md` when debugger-trace needs reusable boundary values and ordinary hooks or breakpoints are insufficient, observer-toxic, or unavailable.
+
+Rules:
+
+1. Treat it as a first-class debugger-trace means, never as baseline or delivery runtime.
+2. Keep a minimal `silent_value/capture_plan.json` (`why`, `recipe`, `success_gate`) before broadening scope; do not block capture on long planning.
+3. Prefer public boundary I/O cards with wire correlation over whole-program traces; protobuf `serializeBinary` and wasm `encode(i32,i32)` count; stop once rebuild material is enough.
+4. If attach is missing, record `debugger_attach_gap` and continue when a silent backend exists.
+5. If no backend can fill the card, record `silent_value_capture_gap` and continue offline or lower the delivery shape.
+6. Park or retain baseline before granting engine-capture `TARGET_ACTIVE`; never pair it with another browser owner in one parallel batch.
+
 ### Breakpoint tools
 
 - `set_breakpoint_on_text`: best when the bundle is minified
@@ -249,7 +272,7 @@ Use the compact preload, initialized-page, hook-miss, page-owned-world, sibling-
 - `evaluate_script`: inspect `document.cookie`, storage values, bootstrap globals, or runtime helper outputs
 - `evaluate_script(mainWorld=true)`: inspect page-owned globals such as webpack caches, SDK objects, or exposed bootstrap helpers
 - if a console or isolated-world probe misses a page-owned wrapper, constructor, or global, repeat the proof in the page-owned world before discarding that path
-- `navigate_page(initScript=...)`: patch or observe a narrow pre-load boundary during the Chrome phase when the installed Chrome tool exposes it
+- `navigate_page(initScript=...)`: patch or observe a narrow pre-load boundary during the Chrome phase when the installed Chrome tool exposes it; if JSVMP XHR is silent and `Navigator.prototype.webdriver` is configurable, delete it here before opening Camoufox
 - `save_script_source`: preserve suspicious bundles for offline diffing when environment mismatch remains unclear
 
 ## Embedded runtime routing
@@ -270,7 +293,7 @@ Use the compact preload, initialized-page, hook-miss, page-owned-world, sibling-
 - empty data: verify pagination, filters, referer, login state, and cursor evolution
 - occasional success: inspect one-time tokens, session refresh, or concurrent request coupling
 - first request works but immediate replay fails: compare cookie mutation, in-memory timestamp slots, and whether a page refresh function must run before every request
-- response gibberish: search for decrypt path, compression, protobuf, or msgpack
+- response gibberish: search for decrypt path, compression, protobuf, or msgpack; if the saved body contains `U+FFFD`, recapture hex at the serializer instead of blaming the schema
 - local runtime timers fail after init but one getter or outgoing request boundary is visible: route to `references/challenge-artifact-harvest-playbook.md` before patching more DOM
 - hooked page fails but clean page works: suspect observer effect, remove invasive hooks, and recapture the baseline before deeper tracing
 
@@ -278,7 +301,7 @@ Use the compact preload, initialized-page, hook-miss, page-owned-world, sibling-
 - managed profile started but no debuggable endpoint is available: keep ENV blocked and do not invent attach-mode evidence
 - passive wire-store is empty or offline: fall back to browser network capture or user-supplied HAR rather than assuming traffic exists
 - packet capture suggests transport failure before application semantics: route to `references/transport-pre-gate-playbook.md`; do not treat coarse PCAP success as signer recovery
-- one browser family fails to start because the other already holds the user-data directory: keep a single `TARGET_ACTIVE` family for wire evidence, mark the blocked family in the capability snapshot, and continue static recovery offline with saved sources plus local Node or Python
+- one browser family fails to start because the other already holds the user-data directory: keep a single `TARGET_ACTIVE` family for wire evidence, mark the blocked family in the capability snapshot, record `debugger_attach_gap` if attach or relaunch fails after park, do not launch a second browser to satisfy ceremony, and continue static recovery offline with saved sources plus local Node or Python. Parking the last Chrome page on `about:blank` is not a profile release when `close_page` refuses the last tab; stay on that Chrome owner for `initScript` or page-world public-boundary capture, then finish in a local runtime
 - saved JS from an evaluate-style file export looks quoted or escaped end to end: decode the JSON string before analysis
 - a named national or textbook digest still mismatches fixed samples: route to `references/crypto-patterns.md` and diff IV, constants, packing, and compress masks instead of trusting the algorithm name
 

@@ -6,7 +6,9 @@ Use this reference after `references/embedded-browser-runtime-playbook.md` has a
 
 - What this file is for
 - Minimal setup
+- Isolate and thread affinity
 - Choose the right load path
+- Script bytes and charset
 - Time control
 - Keep network local
 - Patch the smallest faithful surface
@@ -69,6 +71,12 @@ Useful `iv8` primitives from the tutorial:
 - `__iv8__.wrapNative(fn, name)`
 - `with_devtools(..., watch_apis=[...])`
 
+## Isolate and thread affinity
+
+Keep `JSContext` and `page.load` on the thread that created the isolate.
+A `ThreadPoolExecutor` worker can silently native-crash after the first few successes even when the same mint path is stable on the creating thread.
+Python may still own HTTP, retries, and pagination on other threads; do not move the isolate itself onto a worker.
+
 ## Choose the right load path
 
 Use `page.load(snapshot)` when:
@@ -89,26 +97,54 @@ Rule:
 - if the artifact depends on lifecycle or self-issued requests, prefer `page.load`
 - if parsing alone is enough, do not pay the lifecycle cost
 
+`page.load` snapshot key is `baseURL`. A string `url` field is not a substitute and can yield `location.href = http://undefined/`. Pass the document URL as `baseURL`, then map linked scripts in `resources` to the same absolute URLs the parser will request.
+
+## Script bytes and charset
+
+Decode each linked classic script the way the browser would, per asset, not once for the whole page.
+
+Order:
+
+1. HTTP `Content-Type` charset, when present
+2. otherwise the `<script charset>` attribute
+3. otherwise the document encoding
+
+A bootstrap can mix these. One file may be `iso-8859-1` because the script attribute says so and the HTTP type has no charset; a sibling can be UTF-8 because `Content-Type` carries `charset=utf-8` and that wins over the tag.
+
+Do not latin1-decode a chrome-devtools or other text-saved network body that is already UTF-8 of the browser's decoded source. That inflates string tables: scripts still parse and may even write a short decoy cookie, while the request hook never installs.
+
+If unpacker internals remain on the bootstrap object after load, encoding or a missing DOM node is still wrong. Hook install means the native transport method was replaced, not that `executedScripts > 0`.
+
 ## Time control
 
-Default to `time_mode="logical"` when you want fast deterministic bootstrap.
+`time_mode` is fixed at `JSContext` construction and cannot be switched later.
 
-Use `time_mode="system"` only when:
+`logical` is for fast timer settle:
 
-- the target checks real elapsed time
-- PoW or timestamp deltas depend on wall clock semantics
+- `Date.now()` advances 1ms per call
+- `eventLoop.sleep(ms)` is instant
+- use it after the signer runtime already exists
+
+`system` is for unpackers, PoW, and anti-debug timing:
+
+- JS-period `Date.now()` / `performance.now()` follow real CPU elapsed time
+- a CPU-heavy packer that treats a large `now` delta as debugger-pause will halt (`typeof unpacked === "undefined"`) or spin under `logical`
+- `eventLoop.sleep(ms)` waits real milliseconds; pay that cost when unpack and timer settle share one context
 
 Preferred flow:
 
-1. load the page or script
-2. advance only the time you can justify
-3. harvest the artifact or egress boundary as soon as it becomes stable
+1. pick the clock from the first time-sensitive gate, not from convenience
+2. load the page or script
+3. advance only the time you can justify
+4. harvest the artifact or egress boundary as soon as it becomes stable
 
 Useful moves:
 
-- `sleep(ms)` to advance logical time and flush queued work
+- `sleep(ms)` to flush queued work (logical=instant, system=wall)
 - `drain()` when time should not advance further
 - `advance(total, step)` when frame-sized progression matters
+- a short `sleep`/`drain` is enough when mint already exists; do not wait a seconds-long anti-debug `setInterval`
+- stub exact `Function` bodies such as `debugger;`, `while (true) {}`, and `while(!![])` as no-ops; never `includes("debugger")`
 
 ## Keep network local
 
@@ -150,6 +186,9 @@ Rule:
 - patch the exact missing surface
 - keep the shape native-looking when reflection matters
 - if one instance hook is bypassed, move to the shared boundary instead of adding more one-off stubs
+- stub the actual transport callsite; an XHR send recorder is not a library-ajax wrapper
+- fire the continuation the next request reads (`success` and `complete` when the pager waits on complete)
+- freeze the observed clock writer the signer reads; a `Date.now` pin is not an ajax-success inject
 
 ## Probe before you patch
 
@@ -213,3 +252,22 @@ Record these artifacts:
 - mistaking a host-fidelity gap for a bad signer when the local blob is much shorter or structurally cleaner than the live one
 - letting `iv8` become a stealth browser replacement instead of a narrow host runtime
 - treating `iv8` as the final HTTP executor instead of a local bootstrap bridge
+- wrapping `Math.random` with `wrapNative` before a packer unpacks; a native-looking constant PRNG can hang the packer
+- pinning `Math.random` with a plain assignment so unpack *halts*, then calling the recovered signer; some packers stop without building the signer runtime and need native PRNG plus timeout/retry instead
+- freezing `Date.now` to a constant while an unpacker waits on elapsed time
+- after unpack, freeze the observed writer the signer reads to a server-issued clock only for signing: ajax success, a callback, or a rewritten `Date.now` only if that getter is the writer. Do not freeze a quieter `Date.now` sibling by default, do not keep that freeze during unpack, and do not treat a frozen clock as decoy if the same value is also sent
+- keeping default `time_mode="logical"` for a CPU-heavy packer unpack; `Date.now()` +1ms per call can look like a debugger pause and halt or hang unpack. Use `system` for that gate, and accept real `sleep` if the same context must later install a timer export
+- JSON.stringify / `console.log` of a recovered trap object before reading `typeof`, `Array.isArray`, and `length`
+- concluding an export is absent after construct plus a short probe; some hosts install `window` functions on a timer that only appears after `eventLoop.sleep`
+- writing `srcdoc` / `document.write` into an iframe and assuming inline scripts ran; some embedded hosts leave `scripts=0` / `bodyLen=0`. A cached `about:blank` iframe may also not be the later `about:srcdoc` detection frame
+- intercepting `eval(packer)` to save the unpacked string, then evaluating that string in a fresh world; packer side effects can live in the original context, so the harvested function exists but crashes on call
+- treating `window.call` as a token export when it is only a pager or click dispatcher
+- missing a required `meta[name].content` or unnamed `<meta content>` blob and blaming the signer. A stripped "scripts-only" host can throw `Cannot read properties of undefined (reading 'content')`, leave a short decoy cookie, and keep native `XMLHttpRequest.prototype.open`
+- treating `XMLHttpRequest.prototype.open.length` as the install oracle after the function name already changed
+- decoding every bootstrap script as latin1, or as UTF-8, because one tag said `charset=iso-8859-1`
+- latin1-decoding a UTF-8-saved network body and calling the helper broken when the hook stays native
+- using `page.load({ url })` instead of `baseURL`
+- wrapping both XHR and ajax "to be safe"; stacked wraps hide which continuation minted the field
+- running `JSContext` / `page.load` on a `ThreadPoolExecutor` worker thread
+- treating a mint-shaped cookie from an incomplete Node `document`/`cookie` host as live; native-looking `document`/`screen`/`createElement` can change the artifact
+- waiting a seconds-long anti-debug interval after mint already exists

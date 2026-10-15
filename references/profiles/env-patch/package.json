@@ -2,6 +2,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/test-env-diagnose.js && node tests/test-runtime-contracts.js"
+    "test": "node tests/test-env-diagnose.js && node tests/test-runtime-contracts.js && node tests/test-jsvmp-interceptor-contract.js && node tests/test-runtime-state-continuity.js && node tests/test-timer-queue.js"
   }
 }

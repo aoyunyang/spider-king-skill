@@ -29,6 +29,7 @@ Record how a workstation can expose optional MCP-related endpoints and host prov
 | ENV / profile provider | AdsPower Local API when installed |
 | Wire visibility | WireMCP + tshark when installed |
 | Debug profile dir | dedicated Chrome user-data-dir, not the daily browsing profile |
+| Optional silent-value-capture backend | operator-local low-observer engine or instrumentation host, only when Auto Judge upgrades debugger-trace means |
 
 ## Auto-judge local means
 
@@ -41,6 +42,7 @@ Use these local facts only after the skill Auto Judge chooses the branch:
 | high-pressure `live-target` | start Camoufox/managed host for clean baseline first |
 | debugger needed after host baseline | attach `js-reverse` or `chrome-devtools` only if a debuggable endpoint exists |
 | no attach endpoint after Camoufox baseline | keep HAR/request exports and continue offline with `debugger_attach_gap` |
+| silent-value-capture selected (upgrade or no-attach backend path) | use only an operator-local backend mapped outside the shared skill tree; if unavailable, record `silent_value_capture_gap` |
 
 ## Common endpoints
 
@@ -100,7 +102,7 @@ If Camoufox is not installed or not reachable, low-pressure work continues with 
 
 Keep shared skill docs portable. For machine-private values, use one of:
 
-1. Environment variables such as `SPIDER_KING_CHROME_USER_DATA_DIR`, `SPIDER_KING_CHROME_DEBUG_URL`, `SPIDER_KING_REQABLE_REPORT_URL`, `SPIDER_KING_CAMOUFOX_DEBUG_ENDPOINT`
+1. Environment variables such as `SPIDER_KING_CHROME_USER_DATA_DIR`, `SPIDER_KING_CHROME_DEBUG_URL`, `SPIDER_KING_REQABLE_REPORT_URL`, `SPIDER_KING_CAMOUFOX_DEBUG_ENDPOINT`, and optional silent-value backend placeholders such as `SPIDER_KING_SILENT_CAPTURE_BACKEND` or `SPIDER_KING_SILENT_CAPTURE_OUT`
 2. A file outside the skill tree, for example `<workspace>/spider-king.local.md` or an operator notes directory
 3. In-chat operator answers for a single session
 

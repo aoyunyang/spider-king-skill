@@ -10,6 +10,7 @@ More than 15 usually turns back into notes instead of a reusable checkpoint set.
 
 ## Contents
 
+- [Static analysis six questions](#static-analysis-six-questions)
 - [What a good fact looks like](#what-a-good-fact-looks-like)
 - [What a good fact is not](#what-a-good-fact-is-not)
 - [Fact categories](#fact-categories)
@@ -18,6 +19,19 @@ More than 15 usually turns back into notes instead of a reusable checkpoint set.
 - [Upgrade workflow](#upgrade-workflow)
 - [Storage rule](#storage-rule)
 - [Final rule](#final-rule)
+
+## Static analysis six questions
+
+During Phase 2 source work, answer these before claiming the mutation model is known. Store durable answers as facts when they recheck cleanly.
+
+1. **Scope**: is only one parameter encrypted, or is the whole request chain hijacked (URL rewrite / XHR-fetch intercept)?
+2. **Dynamic factors**: do page, timestamp, nonce, cookie, UA, or host environment values enter the transform?
+3. **Response side**: is the business payload encrypted, packed, or font-mapped on the way back?
+4. **Runtime codegen**: does `eval` / `new Function` / remote script injection build part of the signer?
+5. **Precursors**: which warmup, token, config, or challenge requests must precede the business call on one chain?
+6. **Chain rewrite**: which wrappers mutate method, URL, headers, body, or cookie after business code "finished"?
+
+If any answer is unknown, keep Phase 2 open. Pair with signer entry taxonomy in `references/jsvmp-analysis-playbook.md` when interceptors or VMs are involved.
 
 ## What a good fact looks like
 
@@ -95,6 +109,7 @@ Examples:
 
 - linked bootstrap assets must stay on the same session chain
 - page-seeded state and request-scoped signer state are separate moving parts
+- repeated helper calls require one VM/context lifetime until a persistent-world versus fresh-world control proves runtime identity irrelevant
 - a fresh anonymous session mints transport reachability but not business admission
 
 ### Acceptance facts

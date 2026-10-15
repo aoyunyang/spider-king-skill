@@ -19,6 +19,12 @@ Use this reference when:
 - [Real timeline](#real-timeline)
 - [Dynamic assets and helper versions](#dynamic-assets-and-helper-versions)
 - [Acceptance ladder](#acceptance-ladder)
+- [Layered acceptance and grants](#layered-acceptance-and-grants)
+- [Implementation order](#implementation-order)
+- [Retry contract](#retry-contract)
+- [Issued-image consumption](#issued-image-consumption)
+- [Soft-reject diagnostic ladder](#soft-reject-diagnostic-ladder)
+- [Smoke levels L1-L4](#smoke-levels-l1-l4)
 - [Common traps](#common-traps)
 - [Delivery rule](#delivery-rule)
 
@@ -66,7 +72,10 @@ acceptance without the downstream consumer.
 ## Working method
 
 1. classify the verifier family and failure surfaces before lifting fields:
-   - slider, point-click, ordered-click, rotate, or another verifier branch
+   - slider, point-click, ordered-click, icon-select, sequence-select, rotate, or another verifier branch
+   - same SDK or same challenge page can still expose multiple families; a model, mode, risk type, or protocol selector is a new family until proved otherwise
+   - submit-count (one-shot versus multi-hit), coordinate space, and answer encoding family are discriminators, not cosmetic UI details
+   - a sibling subtype may share a crypto or PoW shell while the answer schema is still new
    - old and new generations of one vendor can still have incompatible fields and proof builders
    - protocol, compute, perception, behavior, telemetry, session, and transport
 2. freeze one verifier round end to end as one ordered transcript:
@@ -89,8 +98,13 @@ acceptance without the downstream consumer.
 6. use one-variable sidecar controls when the main proof looks correct but acceptance still fails
 7. map every shared field or derived relation across baseline, sidecars, delta payloads, and final verify
 8. split the answer path by verifier type:
-   - point-click or ordered-click: prompt extraction, hit localization, proof packaging
+   - point-click, icon-select, or sequence-select: prompt extraction, hit localization, proof packaging, and whether the wire wants one hit or an ordered list
    - slider or image-derived: restored-image coordinate, display coordinate, submitted coordinate, behavior trace
+   - prove display versus natural or restored-image space before converting pixels into proof fields; a visible float bar is not the clickable image
+   - prove which live writer is posted: piece CSS `left`, handle travel, or a scaled display value; they can be equal or they can differ
+   - search the full canvas (`0 .. width - piece_width`); an arbitrary cap below the right edge misses real holes and latches onto leftover dark columns
+   - a filled gap is a piece-sized rectangle. Score left/right **and** top/bottom edges. Tall dark objects in the same y-band are decoys
+   - classify the wire encoding before porting numbers: float-plus-timestamp, integer-scaled pairs, and display-normalized clicks are different builders; a separate total passtime is not a per-click timestamp
 9. separate declared timestamps and event deltas from real wall-clock elapsed time
 10. solve or reconstruct the required outputs locally
 11. validate fixed inputs at every stable encoding, signing, packing, and envelope boundary
@@ -125,7 +139,13 @@ Do not collapse all of these into one `success` flag.
 ## Sidecar discovery and controls
 
 When a correct-looking answer or track still fails, inventory adjacent request
-families before tuning behavior again:
+families before tuning behavior again. Inventory is not collector membership.
+Unknown risk-control defaults to reversing the rejected request, not adding
+unproven URLs. Unproven extra routes are at most one per round, and only after
+controlled omission changes the oracle. Required sidecars that pass omission
+and restoration stay in the contract.
+
+Candidate families:
 
 - device or fingerprint collection
 - log, status, telemetry, or risk-event upload
@@ -212,6 +232,7 @@ Prove these before blaming answer or track quality:
 - counters, gather costs, checksum seeds, or monotonic fields remain linked across packets
 - dynamic fields that must match (ip, server time, local collect start, certify or round id slots) are copied, not re-rolled
 - if each packet validates alone but the round fails, first repair consistency, not trajectory noise
+- when multiple dynamic slots must describe one round, apply the same-world gate in `references/parameter-ownership-playbook.md`
 
 If the baseline remains a captured opaque profile, route its provenance and
 delivery classification through `references/opaque-runtime-profile-playbook.md`.
@@ -277,6 +298,12 @@ Validate from narrow to final:
 HTTP 200, a generic success envelope, a token-shaped value, or sidecar upload
 acknowledgement cannot replace the final applicable gate.
 
+Platform transport wrappers such as JSONP `callback({message:"success"})` or HTTP
+200 are envelope success. Read the platform semantic bit (`PASS`/`REJECT`, risk
+level, grant, inner `result`, fail count, or equivalent). Envelope success plus
+semantic reject is structure-pass, not a solve. An outer status can accept while
+an inner result still rejects.
+
 Treat error or subcode changes as localization evidence. Prove their meaning
 with controlled state changes; do not promote one target's codes into universal
 verifier doctrine. Build a task-local semantic map with
@@ -296,8 +323,88 @@ Record:
 
 If verifier semantics pass and the consumer still returns challenge HTML or empty shells, debug packaging and session binding before reopening answer generation.
 
+## Layered acceptance and grants
+
+Record four booleans separately. Do not collapse them into one "success":
+
+1. `precursorAccepted` — load/init/report or equivalent accepted the round
+2. `verifierGatewayAccepted` — verify/submit semantic accept for this challenge
+3. `serverGrantPresent` — server issued the pass cookie/token on that response
+4. `businessOraclePassed` — original business route returns non-challenge business data
+
+Rules:
+
+- gateway accept without business pass is stage success only
+- server grants are `server-owned`: parse them; do not hardcode or cross-round reuse (`references/parameter-ownership-playbook.md`)
+- HTTP 200 on verify, report, or business with punish/challenge headers or challenge HTML is not business pass
+- a consumed challenge id cannot host a second causal ablation row
+
+## Implementation order
+
+When building a browser-free path, prefer:
+
+```text
+parser + round key -> jar/context -> precursors -> host-owned probes -> verify transport -> parse grant -> optional post-grant report -> business oracle -> fresh round
+```
+
+Keep fixed vectors per layer. Full detail: `references/parameter-ownership-playbook.md`.
+
+
+
+## Retry contract
+
+When verify fails inside one round and a retry is legal:
+
+1. regenerate the materials that the same-world gate marks as per-attempt, not just one header
+2. emit any required failure/report sidecar once before the next verify, in the live order
+3. keep roundKey, identity cookies, and protocol profile unchanged unless the server issued a new round
+4. record `attemptSequence` and the actual attempts used, not only configured max attempts
+5. do not raise max attempts to hide a wrong backend, wrong profile, or broken lifecycle
+
+If a clean success sample passes on attempt 1 or 2 while local needs a large attempt budget, treat that gap as ownership/backend evidence first.
+
+## Issued-image consumption
+
+When the browser issues a challenge image or token before each later page:
+
+1. consume every issued round with a verify POST. Do not GET a fresh image to "skip a hard one" on a session you will keep using
+2. a submitted wrong answer may be retryable on a newly issued round; an unused issue often is not
+3. if a confidence filter fires, abandon the session instead of leaving the artifact unused
+4. split accept-body cumulative pass-rate from reject-body closeness; the same field name can carry both
+5. the first downstream page is the grant oracle. Verifier accept below the stated session floor is not pagination success
+6. search-range, four-edge geometry, and coordinate-space proof live in the working-method slider branch; do not retune tracks until unused-issue is ruled out
+
+See `references/challenge-state-envelope-playbook.md` for the session-rate table.
+
+## Soft-reject diagnostic ladder
+
+For semantic rejects that still return HTTP 200 or a soft envelope, walk this order before track folklore:
+
+1. fresh roundKey and unconsumed challenge state
+2. protocol profile identity versus the success class
+3. transport, jar, and shared-state consistency
+4. request-slot materials and canonical bytes
+5. host lifecycle / token rebuild blocks
+6. behavior or trajectory last
+
+Stop at the first broken layer. Pair with `references/parameter-ownership-playbook.md` same-world and profile gates.
+
+## Smoke levels L1-L4
+
+| Level | Meaning | May claim |
+|---|---|---|
+| L1 | helper emits non-empty local artifacts; isolated network if required stays zero | local smoke only |
+| L2 | fresh verify/check accepted semantically | verifier stage success |
+| L3 | server grant present when required and first business oracle passes | browser-free round success |
+| L4 | multiple independent fresh rounds keep the hard-gate rate | stability evidence |
+
+Package only at L3+. L1/L2 must be named as intermediate.
+
 ## Common traps
 
+- raising retry budgets to compensate for profile or backend mismatch
+- calling L1 helper smoke a collector or business pass
+- tuning tracks before the soft-reject ladder clears session/profile/material layers
 - hunting for a fake business-layer signer while ignoring the verifier
 - automating clicks instead of understanding the verifier payload
 - treating the verifier as UI-only behavior
@@ -313,10 +420,22 @@ If verifier semantics pass and the consumer still returns challenge HTML or empt
 - reusing a verifier artifact without proving whether it is fresh, single-use, or same-round bound
 - injecting a verifier artifact after sign or encrypt when the live flow feeds it into the pre-sign plaintext instead
 - carrying fields from one verifier family or generation into another because the page role looks similar
+- reusing slider distance or trajectory builders on a select-family challenge because they share a vendor SDK
+- treating envelope `success` or JSONP wrapper success as verifier-semantic pass
+- treating an outer status accept as a solve when an inner result or fail count still rejects
+- reusing a sibling subtype crypto shell as proof that the answer schema is the same
+- submitting coordinates from a previous load after a new challenge image was issued
+- fetching a new challenge image and skipping verify because contrast or margin looked weak
+- capping gap search below `width - piece_width` and then blaming the edge scorer
+- treating accept-body `rate` as this-answer closeness, or reject-body `rate` as the session floor
+- normalizing clicks against the natural image size when the proof uses the displayed surface
 - treating automation-contaminated hand-slide failures as trajectory truth
 - continuing trajectory search after structure and sidecars already validate and only a risk-like semantic remains
 - declaring delivery complete at verifier-semantic success without a same-round downstream consumer proof
 - ignoring environment risk after consecutive rejects on one exit or automation profile
+- treating a server grant cookie/token as locally computable
+- reusing a consumed challenge id after gateway accept as if it were a fresh ablation oracle
+- labeling length/charset resemblance as the verify ciphertext algorithm
 
 ## Delivery rule
 

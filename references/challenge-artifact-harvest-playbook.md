@@ -24,6 +24,7 @@ Use this playbook when a hostile runtime already produces the decisive artifact 
 - blocking `vm` execution deadlocks while DOM or script execution preserves timers, microtasks, or request hooks
 - patching the code-generation boundary looks cheaper than filling dozens of missing DOM APIs
 - a top-level SDK init dies inside axios, fetch, adapter glue, telemetry upload, or framework orchestration, but a lower serializer or packer may still be callable directly
+- a public multi-arity WASM/JS export already returns wire-shaped ciphertext or plaintext, so inner AES/GCM rebuild can wait
 
 ## Core idea
 
@@ -39,6 +40,7 @@ Typical stable boundaries are:
 - one synthetic request sent through a globally hooked transport primitive
 - a lower-level serializer, signer, packer, or export below a failing outer facade
 - a cleaner alternate route that makes full challenge execution unnecessary
+- a public multi-arity WASM/JS export that already returns wire-shaped I/O
 
 ## Default artifact priority
 
@@ -49,6 +51,8 @@ When multiple boundaries are available, harvest in this order:
 3. single derived cookie value
 4. storage-resident module only if later regeneration still depends on it
 5. full encrypt-chain rebuild
+
+If a public multi-arity export already returns wire-shaped I/O, harvest that oracle before rebuilding the encrypt chain. Redirect URL and cookies still win when they are already replayable.
 
 If the runtime already emitted a replayable redirect URL, stop patching DOM parity and hand control to Python.
 
@@ -114,6 +118,7 @@ If the same field also has a short offline signer candidate, route writer select
 - whether the outer SDK path fails only in transport adapters or telemetry glue while a lower module already exposes the decisive blob builder
 - whether the runtime only needs a minimal fake success response to keep progressing
 - whether a recoverable patch should catch one exact error class while structural failures still propagate
+- whether a public multi-arity export already returns wire-shaped ciphertext or plaintext, making AES/GCM rebuild optional for the first harvest
 
 ## Common traps
 
@@ -129,6 +134,8 @@ If the same field also has a short offline signer candidate, route writer select
 - using catch-all error swallowing that hides recursion, stack overflow, or state corruption
 - letting the local runtime issue real business HTTP when only local mutation evidence was needed
 - keeping the challenge runtime as a hidden dependency after the artifact shape is already understood
+- dumping a megabyte WASM/WAT file into the working transcript or treating it as collector runtime
+- rebuilding AES/GCM because the export is named encrypt while its I/O is already wire-shaped
 
 ## Delivery guidance
 
@@ -155,4 +162,5 @@ Report these items explicitly:
 - whether the extracted artifact was one cookie value, a composed outbound `Cookie` header, a token, or a wrapped body
 - whether a synthetic request through a hooked transport primitive exposed the signer boundary
 - why intercept-and-forward was cheaper or safer than full rebuild at the chosen boundary
+- whether a public export was used as a wire-shaped oracle instead of inner-crypto rebuild
 - how Python consumed that artifact in the final replay

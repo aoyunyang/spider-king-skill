@@ -19,11 +19,12 @@ Use `{"request": {...}, "result": null}` initially, then replace only the `resul
 
 ## Before Handoff
 
-1. Confirm the intended specialist exists in the current capability snapshot.
-2. Name an executable Spider fallback when it does not exist. If the user explicitly required the missing specialist/runtime, present the fallback for acceptance; do not silently treat it as equivalent.
-3. Park or release the current same-target owner before the next owner becomes `TARGET_ACTIVE`.
-4. Preserve unique unreplayable state as `RETAINED_EXCEPTION`; do not destroy it just to make cleanup look complete.
-5. Reference secrets by task-local path plus hash only. Never embed raw Cookie, Authorization, token, key, IV, account, or private payload values.
+1. Pass `references/evidence-corroboration-gate.md`: the blocker type or ownership claim has at least two independent evidence surfaces. One status code, one cookie/token name, one old note, or one plausible helper output is not enough.
+2. Confirm the intended specialist exists in the current capability snapshot.
+3. Name an executable Spider fallback when it does not exist. If the user explicitly required the missing specialist/runtime, present the fallback for acceptance; do not silently treat it as equivalent. Never invent a family-specific shortcut inside Spider when the specialist is missing.
+4. Park or release the current same-target owner before the next owner becomes `TARGET_ACTIVE`.
+5. Preserve unique unreplayable state as `RETAINED_EXCEPTION`; do not destroy it just to make cleanup look complete.
+6. Reference secrets by task-local path plus hash only. Never embed raw Cookie, Authorization, token, key, IV, account, or private payload values.
 
 ## Request Shape
 
@@ -111,6 +112,7 @@ The owner returns this object and, only when authorized, stores it as the envelo
 
 Spider King remains responsible for accepting the return against the recorded test and final delivery gate. Specialist completion is not protocol completion. Reject or send back a result when it:
 
+- hardens a family or gate claim from only one evidence surface; downgrade that claim to hypothesis and continue the generic Spider loop
 - cites no artifact hash for a technical claim
 - substitutes helper load, output shape, or HTTP status for the requested oracle
 - relies on a browser, browser profile, page-context fetch, or manual state in final delivery

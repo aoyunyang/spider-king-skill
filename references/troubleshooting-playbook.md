@@ -2,13 +2,36 @@
 
 Use this file when replay logic almost works but still fails.
 
+## Failure surface first
+
+When the failing layer is unclear, read `references/failure-surface-taxonomy.md`, choose one primary surface, then jump to the matching symptom section below. If the next experiment is unclear, take exactly one Stuck next action from that file before adding routes or opening another browser. Do not rewrite signer logic while `egress-environment`, `transport-admission`, `session-chain`, or `request-contract` still explain the oracle.
+
+For local-versus-positive-sample disagreement, use `references/positive-sample-ablation-playbook.md` after sample hygiene.
+
 ## Contents
 
+- [Failure surface first](#failure-surface-first)
+- [Ordered failure ladder](#ordered-failure-ladder)
 - [Symptom routing](#symptom-routing)
 - [Multi-context login and activation](#multi-context-login-and-activation)
 - [Async export and report download](#async-export-and-report-download)
 - [Verifier and sample hygiene](#verifier-and-sample-hygiene)
 - [Final rule](#final-rule)
+
+## Ordered failure ladder
+
+When replay almost works, walk this order before rewriting large signer blocks. Full stage detail lives in `references/signer-parity-chain-playbook.md`.
+
+1. session / cookie freshness and outbound `Cookie` parity
+2. missing bootstrap, warmup, or token prefetch on the same chain
+3. timestamp / nonce precision and reuse contract
+4. header, body, and serialization contract
+5. environment-bound inputs only after they are proved to enter the signer or verifier
+6. pacing, rate limits, and egress-only flips
+
+For local vs browser signer mismatch, compare the seven-stage parity chain (inputs → join → time → nonce → key → intermediates → final encoding/slot) and stop at `firstDivergence`.
+
+Silent reject: HTTP `200` + empty business body / wrong content-type / stable business error is not success. Name a primary surface via `references/failure-surface-taxonomy.md`.
 
 ## Symptom routing
 
@@ -29,12 +52,16 @@ Use this file when replay logic almost works but still fails.
 - compare transport wrapper outputs
 - compare whether a verifier or cookie refresh step is now missing
 - if subcodes change across attempts, map the ladder instead of treating each failure as unrelated noise
+- if the body is empty or non-business while status is `200`, treat it as silent reject and run the ordered failure ladder before claiming signer success
+- when local sign bytes disagree with browser, use `references/signer-parity-chain-playbook.md`
 
 ### `200` with gibberish or strings
 
 - check decrypt path
 - check fonts
 - check hint arrays for page-specific header clues
+- treat HTTP 200 plus strings, hints, or mixed-type arrays as a failed page, not a parse quirk
+- if sibling pages already pass on both HTTP versions, do not escalate the last page to a transport family first
 - if raw bytes decode cleanly but saved files or terminal output still look garbled, separate local encoding or render issues from target-side decode gates before changing the protocol hypothesis
 
 ### the chosen login or session validator always looks valid
@@ -99,6 +126,8 @@ Use this file when replay logic almost works but still fails.
 - prefer cookie refresh or existing-session reuse over aggressive relogin loops when the target is rate-sensitive
 
 ### intermittent access denied or route reset by exit
+
+- classify with `references/failure-surface-taxonomy.md` before algorithm rewrites
 
 - keep implementation, session shape, and target route fixed while changing only the network exit or cooldown
 - browser-check the document or business route on the same exit before blaming local signer, verifier, CSRF, or form serialization
@@ -205,7 +234,15 @@ Use this file when replay logic almost works but still fails.
 - rerun fixed vectors
 - only then rebuild the local helper version
 
+
+### browser shows more bootstrap stages than local
+
+- diff stage count, timing, body size/framing sequence, and state transitions before rewriting signers
+- drain timers, promises, and input settle on one session chain; do not stop after the first local post if the browser continues
+- only after repeated independent business successes may a missing stage be labeled non-gating for the current route; keep the evidence
+- classify unsettled multi-stage gaps under `session-chain` or `signer-confidence` via `references/failure-surface-taxonomy.md`, and follow the multi-stage settle rule in `references/workflow-overview.md` (cross-cutting; not a separate phase number)
+
 ## Final rule
 
 
-When stuck, route by symptom. Do not randomly mutate five things at once.
+When stuck, name one primary surface in `references/failure-surface-taxonomy.md`, then take exactly one Stuck next action from that file. Do not randomly mutate five things at once, and do not bulk-add unproven extra routes.

@@ -5,6 +5,20 @@ behavior-sensitive sliders, click orders, or risk-scored transcripts.
 
 Browser tooling is for evidence only. Final delivery remains browser-free.
 
+## Contents
+
+- [Morph labels are mandatory](#morph-labels-are-mandatory)
+- [Why hygiene matters](#why-hygiene-matters)
+- [Sample grades](#sample-grades)
+- [Capture preference order](#capture-preference-order)
+- [Collaborative capture protocol](#collaborative-capture-protocol)
+- [Minimum fields for a usable success sample](#minimum-fields-for-a-usable-success-sample)
+- [How to use samples](#how-to-use-samples)
+- [When samples disagree with local replay](#when-samples-disagree-with-local-replay)
+- [Post-hygiene behavior calibration](#post-hygiene-behavior-calibration)
+- [Hard bans](#hard-bans)
+- [Delivery notes](#delivery-notes)
+
 ## Why hygiene matters
 
 A real human action inside an automation-owned browser can still fail.
@@ -69,16 +83,61 @@ Ask only for the missing sample. Do not demand broad homework.
 - first downstream consumer request and business-pass body
 - active helper or asset hashes when dynamic scripts are involved
 - environment notes: ordinary vs automation, hooks on/off, exit changed or not
+- **morph labels (mandatory for multi-surface verifiers):** `scene` / device class / UA class / geometry or input modality class / page or SDK version tag when present
+- hard gate metric used for that sample (semantic success field + grant artifact name), never mint-shaped alone
+
+## Morph labels are mandatory
+
+For slider, punish-page, or device-companion gates:
+
+1. Store morph labels with the sample before using it as an oracle.
+2. Treat the sample as existence proof of one admitted morph, not as a mandate to rebuild only that morph.
+3. When local replay fails, ablate alternate morphs before track micro-tuning (`references/verifier-morph-and-state-chain-playbook.md`).
+4. Never promote a sample that lacks morph labels into a cross-job mainline assumption.
 
 ## How to use samples
 
+- do not lock gold morph as the only mainline; samples feed ablation, not folklore
+- prefer same-family solved skeletons for process shape, then re-prove the current host path
 - diff `clean-success` against protocol replay first
 - use `contaminated-failure` to avoid false algorithm conclusions
 - rebuild fixed vectors from clean success boundaries only when possible
 - if only contaminated samples exist, say so and limit claims
 
+## When samples disagree with local replay
+
+If a clean success sample exists and the local path still fails, do not change multiple layers at once.
+
+1. Keep sample trust decisions in this file.
+2. Run causal isolation with `references/positive-sample-ablation-playbook.md`.
+3. Name the primary failure surface with `references/failure-surface-taxonomy.md` when the failing layer is still unclear.
+
+Hygiene decides whether a sample may be used. Ablation decides which owned layer causes the oracle gap.
+
+
+## Post-hygiene behavior calibration
+
+Only calibrate behavior after sample hygiene and same-world consistency already hold. This section does not override Doctrine 25/36.
+
+When behavior is the remaining owned surface:
+
+1. freeze geometry and the event-phase skeleton
+2. stabilize event counts before changing durations
+3. adjust stage durations without simultaneously retuning step distributions
+4. only then tune step sizes, noise, pauses, and candidate filters
+5. offline: many seeds must produce distinct sequences; measure generator retry cost
+6. online: new session, new roundKey, no verify retry when measuring hard-gate rate
+7. record reject codes as rejects; do not invent which feature the server hit
+
+If URL, roundKey, or identity cookies disagree, stop calibration and return to the same-world gate.
+
 ## Hard bans
 
+- do not use common-prefix or length-to-gold as the main optimization objective
+- do not start another reverse day after human gold without scheduling an alternate-morph or skeleton-migrate attempt
+- do not treat mint-shaped output or stable reject JSON as gate pass
+- do not erase morph labels when redacting a sample for reuse
+- do not spend primary effort on track entropy while morph/state-chain ablation is unrun
 - do not tune tracks solely against automation hand-slide failures
 - do not inject broad hooks just to "make capture easier" on the only positive path
 - do not mix grants from a success round into a later failed round

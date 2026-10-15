@@ -1,7 +1,7 @@
 interface:
   display_name: "Spider King"
   short_description: "Pure-web protocol reverse with signal-driven MCP routing"
-  default_prompt: "Use $spider-king for pure-web protocol reverse only: auto-judge artifact-only vs live target (live-target) vs continuation from signals; default live baseline is chrome-devtools and upgrade to Camoufox/managed host only on fingerprint pressure; use js-reverse after sequential handoff when debug attach exists; keep APK/app/mini-program primary tasks out of scope; deliver the smallest browser-free Python protocol result."
+  default_prompt: "Use $spider-king for pure-web protocol reverse only: auto-judge artifact-only vs live target (live-target) vs continuation from signals; default live baseline is chrome-devtools and upgrade to Camoufox/managed host only on fingerprint pressure; if DP is already required let js-reverse own both sequential roles on one host and do not launch a second Chrome; lock replay identity to installed curl impersonate rather than a newer live Chrome major; unknown risk-control reverses the rejected request and does not bulk-add unproven extra routes; after sequential handoff use debugger-trace means (default js-reverse when attach exists; silent-value-capture when attach is missing or page-world capture is insufficient/observer-toxic); never put capture backends into compact-replay/collector; keep APK/app/mini-program primary tasks out of scope; deliver the smallest browser-free Python protocol result."
 
 policy:
   allow_implicit_invocation: true

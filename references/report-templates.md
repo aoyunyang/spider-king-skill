@@ -32,6 +32,14 @@ Phase Delta
 - New evidence:
 - Changed hypothesis:
 - Capability or intake-mode change:
+- Debugger means: js-reverse / silent-value-capture / both / none
+- Silent recipe or gap: A-F / debugger_attach_gap / silent_value_*_gap / n/a
+- browser_mode: launch | attach | unavailable
+- curl_impersonate: default=chromeXXX; max=chromeXXX
+- capsule_major: chromeXXX
+- business_request: found | candidate | missing
+- unproven_routes: 0 | 1
+- next_action: one Stuck next action from failure-surface-taxonomy
 - Evidence package path and SHA-256:
 - First divergence: step / path / kind / or not yet compared
 - Proof manifest artifact hash: SHA-256 computed after the manifest is written
@@ -79,16 +87,22 @@ Dynamic Validation
 - Raw payload sample: redacted excerpt or local path plus hash
 - Evidence package path and SHA-256:
 - First divergence: step / path / kind / or no divergence
+- Morph labels: scene / device class / UA class / geometry class (if verifier-gated)
+- Hard gate metric: semantic success field + grant artifact name
+- Writer class: algorithmic / local VM L2 / pool-backed / pure port L3
+- N-run rate: passes/total on hard gate metric (if claiming stability)
 
 What changed on the wire
 - Query:
 - Body:
 - Headers: names, changed slots, and redacted fingerprints
 - Cookies: names, writers, scopes, and redacted fingerprints
+- State-chain completeness: bootstrap reports / init / companions present or missing
 
 Conclusion
 - Verified helper or protocol rule:
 - Verified decode or parser rule:
+- Primary failure surface if not green:
 - Remaining unknowns:
 ```
 

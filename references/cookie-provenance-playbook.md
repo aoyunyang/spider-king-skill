@@ -48,6 +48,8 @@ If a `document.cookie` hook stays silent, read that result narrowly: it only pro
 
 The stored cookie jar and the final outbound `Cookie` header are related but not identical evidence. Path rules, ordering, wrapper mutation, or helper assembly can make the live wire header differ from `document.cookie` or a library-managed jar. When replay still fails, capture the wire header that actually crossed the boundary.
 
+The same token name can also occupy more than one slot: cookie, query, and header. A stale cookie value can poison a request that mints the live token into query or header. Reconcile slots before blaming the signer.
+
 If the cookie appears after a redirect or wrapper page, treat the redirect chain as part of the provenance story.
 
 Session-looking, fingerprint-looking, or telemetry-looking cookie names do not prove server issuance. Some blocking cookies are minted entirely on the client from bootstrap config, compact JSON fingerprints, UUID variants, or embedded compatibility constants, then written locally or emitted only in the final outbound header.
@@ -77,6 +79,7 @@ the downstream consumer.
 3. separate server-issued seed cookies from locally derived replay state before modeling refresh logic
 4. search source for the cookie name and for `document.cookie`
 5. compare stored cookie state with the exact outbound `Cookie` header, including ordering or helper-composed pieces, when egress evidence is available
+5b. when seeding an impersonate-client jar, bind the request hostname; do not mix empty-domain session cookies with host-only rotating tokens
 6. identify the writer class:
    - response header
    - inline script
@@ -90,7 +93,8 @@ the downstream consumer.
    - page-exposed refresh helper
    - session bootstrap
    - local formula seeded by config JS, fingerprint vector, structured random id, or compatibility constant
-8. only then choose delivery:
+8. if the next call fetches rotating bootstrap JS, clear the previous locally-minted cookie before that GET
+9. only then choose delivery:
    - preserve the protocol response if the server sets it
    - replay local JS if bootstrap JS sets it
    - rebuild the exact local minting recipe if page code derives it from config or fingerprint or session inputs
@@ -110,9 +114,15 @@ the downstream consumer.
 - treating a server-issued seed cookie as if it were already the final replay artifact
 - refreshing only one cookie name when the route actually rotates a seed tuple plus one locally derived replay value
 - blindly merging helper side-effect cookies into the main session without checking whether the decisive artifact is actually the composed outbound `Cookie` header
+- wrapping the live mint setter on a success host and treating the poisoned cookie as algorithm failure
+- observing only `document.cookie` while the mint also writes storage
+- treating host-scalar parity as proof that local mint ran
 - saving only the login POST cookies and dropping later activation cookies
 - treating one-time handoff tickets as long-lived session cookies
 - exporting a jar before business-identity validation passes
+- leaving a stale same-name cookie in the jar when the live request mints that token into query or header
+- leaving a stale locally-minted cookie on the next bootstrap-script GET; that cookie can change the returned JS or branch
+- seeding an impersonate-client cookie with an empty domain while a rotating token is host-only; `get_dict(domain=host)` can drop the session cookie even if send-time host fill still happens
 
 
 

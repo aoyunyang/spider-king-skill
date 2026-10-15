@@ -1,11 +1,11 @@
 # Optional env_core Advanced Path
 
-默认优先使用当前 skill 的 `scripts/env-diagnose.js` 和 `env/` 模块树。只有在下面情况出现时，再启用 `scripts/env_core.js` 这条高级手写补环境路径：
+默认优先使用当前 profile 的 `$ENV_PROFILE/scripts/env-diagnose.js` 和 `$ENV_PROFILE/env/` 模块树。只有在下面情况出现时，再启用 `$ENV_PROFILE/scripts/env_core.js` 这条高级手写补环境路径：
 
 1. 需要 `Function.prototype.toString` / `Symbol.toStringTag` / 构造器外形这类 native 伪装。
 2. 模块化 env 已能加载，但签名格式与浏览器仍不一致，需要定向监控少数对象。
 3. 用户已有明确入口，且希望把补丁集中在项目的 `run.js` 中维护。
-4. webpack 模块已定位，需要配合 `scripts/webpack_runtime.js` 提取和加载模块。
+4. webpack 模块已定位，需要配合 `$ENV_PROFILE/scripts/webpack_runtime.js` 提取和加载模块。
 
 ## Contents
 
@@ -144,12 +144,12 @@ try {
 3. 每轮只补一个最小因果单元：一个值、一个函数壳、一个返回对象或一个对象契约。
 4. `env.report()` 中 0 error / 0 undefined 只代表外部访问链看起来完整，不代表签名已可用。
 5. 签名长度、前缀、编码形态和浏览器不一致时，继续定位 `first divergence`，不要直接迁移 Python / execjs。
-6. 如果有 Proxy / gap log，先用 `scripts/analyze-gap-log.js` 聚合推荐模块，再决定手写补丁顺序。
-7. 如果需要真实浏览器种子，先在 `scripts/collect-browser-env.js` 的 `CONFIG` 中列出具体 Cookie/storage key；脚本默认不导出这些值或 canvas。结果只落到当前任务的 `js_reverse_cache/`。
+6. 如果有 Proxy / gap log，先用 `references/profiles/env-patch/scripts/analyze-gap-log.js` 聚合推荐模块，再决定手写补丁顺序。
+7. 如果需要真实浏览器种子，先在 `references/profiles/env-patch/scripts/collect-browser-env.js` 的 `CONFIG` 中列出具体 Cookie/storage key；脚本默认不导出这些值或 canvas。结果只落到当前任务的 `js_reverse_cache/`。
 
 ## 模块契约
 
-复杂手写补丁建议按 `references/module-contracts.md` 组织：
+复杂手写补丁建议按 `references/profiles/env-patch/references/module-contracts.md` 组织：
 
 1. `patchPlan`：准备补哪些点。
 2. `patchCode`：补丁代码或代码片段。

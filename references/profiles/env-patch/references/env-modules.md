@@ -210,9 +210,9 @@
 
 #### `timer/timeout.js`
 - **前缀匹配**: `setTimeout`, `setInterval`, `clearTimeout`, `clearInterval`
-- **提供**: 完整的定时器实现（含 ID 跟踪）
+- **提供**: `setTimeout`/`clearTimeout` 宏任务队列、`__drainTimers__`、`__getActiveTimers__`、`__clearAllTimers__`
 - **依赖**: 无
-- **说明**: env-diagnose.js 已有基础 stub（返回 0），加载此模块可获得带 ID 管理的实现
+- **说明**: 回调绝不能在 `setTimeout` 函数体内同步执行。无原生事件循环时由驱动调用 `__drainTimers__(limit)`。无原生 `setInterval` 时 `setInterval` 返回 0，不模拟周期任务。env-diagnose.js 基础 stub 仍返回 0；需要可驱动队列时再加载本模块。
 
 ### encoding/ — 编码
 

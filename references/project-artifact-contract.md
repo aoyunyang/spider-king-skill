@@ -6,6 +6,7 @@ Use this before the first save, before promoting code out of cache, and whenever
 
 - [Core Rule](#core-rule)
 - [Before First Write](#before-first-write)
+- [Success and failure path hygiene](#success-and-failure-path-hygiene)
 - [Volatile Evidence](#volatile-evidence)
 - [Stable Delivery](#stable-delivery)
 - [Proof Manifest](#proof-manifest)
@@ -50,6 +51,14 @@ Reject task-owned writes when:
 - the path is a symlink, junction, mount-point reparse path, or hard-link target
 - the write would overwrite an existing stable file without explicit path approval
 
+
+## Success and failure path hygiene
+
+- give each runner invocation a unique task-local run id or directory
+- never let a failed diagnosis overwrite the last accepted success package
+- store accepted fixtures and reports under a success-stable name; write failure dumps beside them, not on top of them
+- regenerate volatile helper inputs under run-scoped temp names when concurrent stages exist
+
 ## Volatile Evidence
 
 Use `js_reverse_cache/tasks/<task-id>/` for:
@@ -57,6 +66,7 @@ Use `js_reverse_cache/tasks/<task-id>/` for:
 - `task.json`
 - `network.jsonl`
 - `runtime-evidence.jsonl`
+- `silent_value/` when low-observer boundary capture is used (`capture_plan.json`, `sign_boundary.jsonl`, `vm_public_io.jsonl`, `wasm_boundary.jsonl`, `state_writes.jsonl`, `wire_correlations.jsonl`, `source_index.json`)
 - `handoff.json`
 - `experience-candidate.json`
 - `fixtures/`
@@ -64,6 +74,8 @@ Use `js_reverse_cache/tasks/<task-id>/` for:
 - downloaded JS, WASM, HTML, fonts, images, protobuf samples, HAR extracts, screenshots, net logs, and decoded scratch files
 
 Create folders on demand. Do not pre-create empty evidence trees.
+
+Silent-value cards follow schema `spider-king.silent_value/v1` in `references/silent-value-capture-playbook.md`. Keep raw proprietary capture dumps task-local; index them from `source_index.json` by path, size, and hash when needed. Do not promote capture backends into stable delivery code.
 
 Raw account state, cookies, tokens, Authorization values, personal data, and full private responses must stay local, redacted from chat, and excluded from version control. Prefer hashes, lengths, field names, provenance, and structural samples in reports.
 

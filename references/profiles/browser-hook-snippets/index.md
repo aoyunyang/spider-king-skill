@@ -94,22 +94,22 @@
 
 ## 资源路由
 
-按目标只读取一个分类，必要时再补第二个。`references/` 只解释 Hook 点和扩展约束；可执行片段必须从 `scripts/` 的受测实现生成，不能从 reference 文档恢复旧的全值日志：
+按目标只读取一个分类，必要时再补第二个。下列路径均为 skill-root 可解析路径（也可用 `$HOOK_PROFILE/references|scripts/...`）。`references/` 只解释 Hook 点和扩展约束；可执行片段必须从 `scripts/` 的受测实现生成，不能从 reference 文档恢复旧的全值日志：
 
-- `references/network.md`: XHR、fetch、WebSocket、postMessage
-- `references/storage.md`: cookie、localStorage、sessionStorage
-- `references/crypto.md`: WebCrypto、CryptoJS、随机数和编码
-- `references/dom.md`: DOM 注入、MutationObserver、canvas
-- `references/runtime.md`: JSON、eval、Function、Blob、Worker
-- `references/snippets.md`: 片段索引
-- `references/hook-output-samples.md`: 输出和降噪样本
+- `references/profiles/browser-hook-snippets/references/network.md`: XHR、fetch、WebSocket、postMessage
+- `references/profiles/browser-hook-snippets/references/storage.md`: cookie、localStorage、sessionStorage
+- `references/profiles/browser-hook-snippets/references/crypto.md`: WebCrypto、CryptoJS、随机数和编码
+- `references/profiles/browser-hook-snippets/references/dom.md`: DOM 注入、MutationObserver、canvas
+- `references/profiles/browser-hook-snippets/references/runtime.md`: JSON、eval、Function、Blob、Worker
+- `references/profiles/browser-hook-snippets/references/snippets.md`: 片段索引
+- `references/profiles/browser-hook-snippets/references/hook-output-samples.md`: 输出和降噪样本
 
 预置脚本：
 
-- `scripts/xhr_fetch.js`
-- `scripts/cookie_header.js`
-- `scripts/crypto_api.js`
-- `scripts/storage.js`
+- `references/profiles/browser-hook-snippets/scripts/xhr_fetch.js`
+- `references/profiles/browser-hook-snippets/scripts/cookie_header.js`
+- `references/profiles/browser-hook-snippets/scripts/crypto_api.js`
+- `references/profiles/browser-hook-snippets/scripts/storage.js`
 
 修改或迁移 profile 后运行：
 

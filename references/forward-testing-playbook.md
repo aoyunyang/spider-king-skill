@@ -85,7 +85,7 @@ checks; they are not literal JSON:
   "suite": {
     "path": "references/official-self-test-task-suite.md",
     "contract_sha256": "46d5afad7dbb9acd068188f762576d81c89bf545e4b794c2feef32f4f6eea930",
-    "task_count": 160
+    "task_count": 191
   },
   "skill": {
     "path": "SKILL.md",
@@ -176,15 +176,15 @@ run into a passing one.
 
 Use exactly one explicit scope:
 
-- `smoke`: 1 to 148 unique official tasks, with `task_count` equal to the
+- `smoke`: 1 to 190 unique official tasks, with `task_count` equal to the
   number of report items
-- `full`: every one of the 160 official tasks exactly once
+- `full`: every one of the 191 official tasks exactly once
 
 A valid smoke result is only a smoke PASS. It must not be described as full
 behavioral non-regression. `full_pass` becomes true only when the report uses
-`full`, covers all 160 unique headings, and passes every artifact and reviewer
+`full`, covers all 191 unique headings, and passes every artifact and reviewer
 check. Static validation or `--self-test` alone never supports that claim.
-The validator refuses more than 160 items and caps aggregate response reads at
+The validator refuses more than 191 items and caps aggregate response reads at
 64 MiB; oversized evidence must be reduced before review.
 
 ## Validation

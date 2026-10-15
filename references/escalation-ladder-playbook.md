@@ -12,6 +12,7 @@ The goal is to keep reverse work honest:
 ## Contents
 
 - [Core rule](#core-rule)
+- [Solution-mode decision tree](#solution-mode-decision-tree)
 - [Universal ladder](#universal-ladder)
 - [Promotion cues](#promotion-cues)
 - [Bad jumps](#bad-jumps)
@@ -30,6 +31,26 @@ Before moving up one rung, record all of these:
 4. why the delivery gate still remains browser-free after the move
 
 If you cannot write those four lines, do not escalate yet.
+
+## Solution-mode decision tree
+
+Use this tree to pick the first honest mode. Then climb the ladder inside that mode — do not jump to browser delivery.
+
+```text
+real business request found?
+  no  -> decoy/bootstrap/stream triage (pattern atlas + session/stream playbooks)
+  yes -> encrypted/moving fields?
+           no  -> pure request contract + session/cookie recovery
+           yes -> where does mutation live?
+                    clear JS / standard crypto     -> pure Python or tiny helper (rungs 1-3)
+                    obfuscated but host-free        -> deob + fixed vectors (pure-obfuscation)
+                    interceptor/wrapper owned       -> boundary proof + feed-cut, then port
+                    WASM export boundary            -> I/O first, then local wasm helper
+                    VM / challenge host-bound       -> public I/O + local host bootstrap (rungs 3-5)
+                    only browser stack admits TLS   -> fix transport profile; still no browser delivery
+```
+
+Anti-bot class (`references/anti-bot-class-playbook.md`) biases the first mode; the ladder still governs promotion. Signer mismatches use `references/signer-parity-chain-playbook.md` at rungs 1-3 before host patching.
 
 ## Universal ladder
 
@@ -85,6 +106,10 @@ Typical moves:
 - wrapper tracing
 - narrow request-bound hooks
 - outbound header or body capture
+- exit-first reverse-trace from a known final artifact
+- class-gated observation only (`references/anti-bot-class-playbook.md`)
+
+For VM/interceptor observation failures, climb the observation degrade ladder in `references/jsvmp-analysis-playbook.md` (narrow -> lighter -> transparent -> class-limited broader -> local host). Do not jump from failed page-world hooks to browser delivery.
 
 Stay here when:
 
@@ -95,6 +120,34 @@ Stay here when:
 Move up only when:
 
 - the boundary is known and the missing logic still depends on local execution
+- or the boundary is known but page-world observation cannot produce correlated fixed-input values without observer damage
+
+### Rung 2A: Silent value capture
+
+This rung is a first-class debugger-trace means, not a penalty box. Use it immediately on upgrade triggers or no-attach-with-backend cases.
+
+Prove:
+
+- low-observer values at the narrowest stable boundary
+- correlated fixed-input material for the decisive field or state write
+- clean-versus-capture comparison when observer risk is not already low
+
+Typical moves:
+
+- call-frame or breakpoint evaluation that preserves behavior
+- recipe-scoped silent value capture under `references/silent-value-capture-playbook.md`
+- public VM or WASM boundary I/O before opcode or handler surgery
+
+Stay here when:
+
+- hooks change verifier behavior, timing, or identity
+- attach is missing or systematically misses the value-bearing boundary
+- JSVM or anti-probe logic blocks ordinary page-world observation
+
+Move up only when:
+
+- fixed-input vectors or public boundary outputs are in hand and the remaining work is local reproduction
+- or every available capture backend is proved unavailable (`silent_value_capture_gap`) and local reproduction must proceed from weaker evidence
 
 ### Rung 3: Pure local reproduction
 
@@ -173,6 +226,7 @@ Use these cues to decide the next rung.
 | Standard helper output differs on frozen inputs | Rung 1 |
 | Query or body values look right but replay still fails | Rung 1 |
 | You still do not know where the wire payload is mutated | Rung 2 |
+| Boundary known but page-world hooks poison the target or cannot yield fixed inputs | Rung 2A |
 | The mutation point is known and looks self-contained | Rung 3 |
 | The code reads host objects or depends on timers or parser order | Rung 4 |
 | Local runtime artifact is much shorter, simpler, or structurally wrong | Rung 5 |
@@ -207,3 +261,5 @@ The ladder exists to prevent fake progress.
 
 Do not promote because the heavier layer feels more powerful.
 Promote only because the lighter layer was disproven with evidence.
+
+Inside a rung, patch by `first_divergence` minimal units from `references/reproducible-evidence-playbook.md`. Crossing rungs without moving the first divergence is not progress.

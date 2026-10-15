@@ -2,6 +2,16 @@
 
 Use this playbook when one request field name can be written by more than one client path, and a short offline token shape is not the same as the live wire-success shape.
 
+## Contents
+
+- [Route here when](#route-here-when)
+- [Core idea](#core-idea)
+- [Fast execution path](#fast-execution-path)
+- [High-value checks](#high-value-checks)
+- [Common traps](#common-traps)
+- [Delivery guidance](#delivery-guidance)
+- [Minimal handoff notes](#minimal-handoff-notes)
+
 ## Route here when
 
 - the same query, header, or body key sometimes carries a short token and sometimes a long token
@@ -9,13 +19,19 @@ Use this playbook when one request field name can be written by more than one cl
 - call stacks show more than one path touching the field: open rewrite, send retry, challenge navigate, cookie-to-query injection
 - sample exact-URL replay works, but fresh timestamps with the recovered short generator fail
 - a session-stable prefix plus a URL-bound body appears on success, while research samples only produce compact compressed tokens
+- one product keeps different live signers on HTTP, websocket, protobuf, or report surfaces
+- an easy business route accepts one generation of a field while a hard or antispam route rejects it
+- the same param name is written as a cookie and as an in-memory global, and page code prefers one when set
 
 ## Core idea
 
 A parameter name is not a single algorithm.
+A product is not a single signer.
 
-Prove the **wire-success writer** before deep-porting any candidate writer.
-Offline self-check on a secondary path is research evidence, not delivery proof.
+Prove the **wire-success writer** on the current surface and on the hardest live route before deep-porting any candidate writer.
+Offline self-check on a secondary path or a soft route is research evidence, not delivery proof.
+
+Inventory signers by surface first: HTTP query, websocket, protobuf, and sidecar report can each keep a different live helper. Reuse across surfaces only after the current surface proves it.
 
 ## Fast execution path
 
@@ -34,6 +50,9 @@ Offline self-check on a secondary path is research evidence, not delivery proof.
    - **long body**: session or environment prefix plus high-entropy or multi-segment body
    - **challenge rewrite**: challenge HTML/JS navigates or retries with a rewritten business URL
    - **cookie projection**: cookie material injected into query by an open hook
+   - **generation switch**: same field name, newer algorithm required on the hard route
+   - **surface-local signer**: a helper that is live on one request surface and foreign on another
+   - **in-memory global vs cookie**: same name on a window global and `document.cookie`; the page prefers the global when it is set, else the cookie. Both values can be mint-shaped. Shape is not acceptance.
 
 3. Map each class to a call stack.
    Prefer initiator stacks from live open/send/fetch hooks over source-only guesses.
@@ -42,6 +61,7 @@ Offline self-check on a secondary path is research evidence, not delivery proof.
 4. Live-accept only the class present on successful business responses.
    If short tokens never appear on successful wire samples, do not deliver a short-token generator as the product path.
    If long tokens appear only after challenge HTML, route to challenge artifact harvest first.
+   If the page-priority writer still yields schema-valid filler JSON, try the other writer from the same mint before rebuilding the host.
 
 5. Prove binding and refresh separately.
    - URL-bound: changing timestamp/page invalidates the body
@@ -62,6 +82,8 @@ Offline self-check on a secondary path is research evidence, not delivery proof.
 - Does the long path appear only on the second attempt after HTML challenge?
 - Does app-layer HMAC/sign exclude the verifier param while still being required on browser XHR?
 - Can the challenge path succeed without the app signer, or the reverse?
+- After mint, did the helper write cookie, window global, or both, and which slot does page code read first?
+- If business JSON is schema-valid but every row is the unsigned filler sentinel, try the other writer on the same mint before blaming the host.
 
 ## Common traps
 
@@ -70,6 +92,15 @@ Offline self-check on a secondary path is research evidence, not delivery proof.
 - declaring protocol automation done after sample exact replay
 - continuing encrypt reverse after a challenge helper already emits the rewritten URL
 - merging app signer recovery and verifier recovery into one unfinished ticket
+- proving a signer on a soft or detail route and calling the hard or antispam route done
+- porting one recovered site signer onto websocket or protobuf because the product name matches
+- treating the HTML-instructed function name as the same writer as a differently cased runtime export that wraps extra local bytes
+- treating the HTML ajax helper as the writer after the runtime replaced `$.ajax` or `fetch` with a VM export
+- collecting the VM-native body after an interceptor discarded the original send and rebuilt a sibling-shaped form
+- treating a short same-name cookie as the live token when `open`/`fetch` already appended a long query value
+- treating a mint-shaped cookie as the live token when the page prefers a same-name in-memory global
+- treating 32-hex or other mint-shaped tokens as live acceptance
+- skipping the other writer after HTTP 200 filler/punish JSON
 
 ## Delivery guidance
 
@@ -79,6 +110,7 @@ Preferred order:
 2. harvest or regenerate that class on a fresh URL
 3. only then paginate
 4. keep rejected writers in analysis notes as misleading signals
+5. when cookie and in-memory global share a name, read both, prefer the page-priority slot, and retry the other writer on punish JSON
 
 Helper I/O, when the success class is challenge rewrite:
 

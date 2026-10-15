@@ -24,7 +24,7 @@ webpack 4 IIFE：
 
 1. 从已确认的入口函数追溯到模块 ID。
 2. 提取入口模块和它的 `__webpack_require__(id)` 依赖。
-3. 将模块按 `id: function(module, exports, __webpack_require__) { ... }` 填入 `scripts/webpack_runtime.js` 的副本。
+3. 将模块按 `id: function(module, exports, __webpack_require__) { ... }` 填入 `references/profiles/env-patch/scripts/webpack_runtime.js` 的副本。
 4. 在运行入口里先补环境，再 `import runtime from './webpack_runtime.js'`，最后调用 `runtime(entryId)`。
 5. 报 `webpack module not found` 时，回 bundle 中继续提取缺失 ID。
 
@@ -33,6 +33,21 @@ webpack 4 IIFE：
 把 `webpack_runtime.js` 复制到执行代码工作区的 `js_reverse_cache/tasks/<task-id>/env/`。如果任务目录不存在，先按项目产物契约创建。
 
 `webpack_runtime.js` 是 ESM `.js` 文件。复制后确保 `js_reverse_cache/tasks/<task-id>/env/package.json` 含 `{ "type": "module" }`，或目标项目根目录已启用 ESM，否则 `import runtime from './webpack_runtime.js'` 会在 CommonJS 项目中失败。
+
+## Expose require, skip UI mount
+
+When encrypt/sign is inside a webpack IIFE, do not complete Vue `$mount` / layout / transition trees in a headless host.
+
+Patch the bootstrap so the require function is exported before the entry call:
+
+```javascript
+// bootstrap ends like: return R.m = mods, R.c = cache, R.p = path, R(0);
+// insert before R(0): globalThis.__wpRequire = R,
+```
+
+Then `__wpRequire(moduleId)` returns the encrypt/sign exports. Feed frozen args. Patch UI crash points only after proving that export is unreachable.
+
+`scripts/webpack_runtime.js` assigns `globalThis.__wpRequire = __webpack_require__` after the runtime object exists.
 
 ## 注意
 
@@ -51,4 +66,4 @@ const evidence = capture.records;
 capture.restore();
 ```
 
-`records` 只包含有界的 chunk ID 与 module ID，不包含模块源码、请求体或环境值。捕获器不扫描全局对象，不执行模块函数，也不替代 `scripts/webpack_runtime.js` 的显式模块提取流程。
+`records` 只包含有界的 chunk ID 与 module ID，不包含模块源码、请求体或环境值。捕获器不扫描全局对象，不执行模块函数，也不替代 `references/profiles/env-patch/scripts/webpack_runtime.js` 的显式模块提取流程。

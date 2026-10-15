@@ -39,9 +39,9 @@ from validate_skill import (  # noqa: E402
 
 
 SCHEMA_VERSION = 1
-OFFICIAL_SUITE_TASK_COUNT = 160
+OFFICIAL_SUITE_TASK_COUNT = 191
 OFFICIAL_SUITE_CONTRACT_SHA256 = (
-    "fb40033033ecdbaf9b78f507fce48ffa8ce78ec388e6afcbc0740e23091f6a3d"
+    "d8a909cb704568aec609a85116d5e48bd4f9f117316851621f9adac8bcced7ec"
 )
 DEFAULT_SKILL_ROOT = SCRIPT_DIR.parent
 DEFAULT_SUITE_RELATIVE_PATH = Path("references/official-self-test-task-suite.md")
@@ -461,7 +461,7 @@ def _scope(
         validation.require(item_count > 0, "smoke scope requires at least one task")
         validation.require(
             item_count < OFFICIAL_SUITE_TASK_COUNT,
-            "a 160-task report must use full scope, not smoke scope",
+            f"a {OFFICIAL_SUITE_TASK_COUNT}-task report must use full scope, not smoke scope",
         )
     return kind or "unknown"
 
@@ -997,7 +997,7 @@ def validate_report(
                 and scope == "full"
                 and len(items) == OFFICIAL_SUITE_TASK_COUNT
             ),
-            "full_pass may be true only for a 160-task full-scope report",
+            f"full_pass may be true only for a {OFFICIAL_SUITE_TASK_COUNT}-task full-scope report",
         )
 
     cases_by_heading = {case.heading: case for case in cases}
@@ -1210,7 +1210,7 @@ def run_self_test() -> None:
 
         weak_types = json.loads(json.dumps(report))
         weak_types["schema_version"] = True
-        weak_types["suite"]["task_count"] = 160.0
+        weak_types["suite"]["task_count"] = 178.0
         report_path.write_text(json.dumps(weak_types), encoding="utf-8")
         weak_type_result = validate_report(report_path, skill_root=root)
         if weak_type_result["valid"]:

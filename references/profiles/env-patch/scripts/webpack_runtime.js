@@ -93,5 +93,9 @@ __webpack_require__.m = __webpack_modules__;
 __webpack_require__.c = __webpack_module_cache__;
 __webpack_require__.p = '';
 
+if (typeof globalThis !== 'undefined') {
+  globalThis.__wpRequire = __webpack_require__;
+}
+
 export { __webpack_modules__, __webpack_module_cache__, __webpack_require__ };
 export default __webpack_require__;

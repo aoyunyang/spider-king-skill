@@ -64,4 +64,4 @@ Object.defineProperty(document, Symbol.toStringTag, { value: 'HTMLDocument', con
 
 ## 注意
 
-这些对策不能保证绕过所有检测。VMP 可能在 opcode 层面完成检测，不经过外部 JS API。遇到这种情况，参考 `references/limitations.md`。
+这些对策不能保证绕过所有检测。VMP 可能在 opcode 层面完成检测，不经过外部 JS API。遇到这种情况，参考 `references/profiles/env-patch/references/limitations.md`。

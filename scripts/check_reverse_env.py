@@ -149,6 +149,53 @@ def curl_cffi_default_chrome() -> str:
     return _bounded_diagnostic(str(DEFAULT_CHROME), max_chars=64)
 
 
+def _desktop_chrome_impersonate_major(name: str) -> int | None:
+    lowered = name.strip().lower()
+    if "android" in lowered or "ios" in lowered:
+        return None
+    match = re.fullmatch(r"chrome(\d+)[a-z]?", lowered)
+    if match is None:
+        return None
+    return int(match.group(1))
+
+
+def _max_desktop_chrome_impersonate(names: list[str]) -> str | None:
+    ranked: list[tuple[int, str]] = []
+    for name in names:
+        major = _desktop_chrome_impersonate_major(name)
+        if major is not None:
+            ranked.append((major, name))
+    if not ranked:
+        return None
+    return max(ranked, key=lambda item: (item[0], item[1]))[1]
+
+
+def curl_cffi_chrome_impersonate_profile() -> str:
+    if module_status("curl_cffi") != "available":
+        return "missing"
+    try:
+        from curl_cffi.requests import impersonate as impersonate_mod
+    except Exception as exc:  # pragma: no cover - diagnostic script
+        return f"unavailable: {type(exc).__name__}"
+    default_chrome = str(getattr(impersonate_mod, "DEFAULT_CHROME", "") or "").strip()
+    names: set[str] = set()
+    if default_chrome:
+        names.add(default_chrome)
+    browser_type = getattr(impersonate_mod, "BrowserType", None)
+    try:
+        for member in browser_type or []:
+            names.add(str(getattr(member, "value", member)))
+    except TypeError:
+        members = getattr(browser_type, "__members__", {})
+        for member in members.values():
+            names.add(str(getattr(member, "value", member)))
+    max_chrome = _max_desktop_chrome_impersonate(sorted(names))
+    if not default_chrome and not max_chrome:
+        return "unavailable"
+    profile = f"default={default_chrome or 'unknown'}; max={max_chrome or default_chrome or 'unknown'}"
+    return _bounded_diagnostic(profile, max_chars=96)
+
+
 def _windows_api_directory(function_name: str) -> Path | None:
     if os.name != "nt":
         return None
@@ -1129,6 +1176,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print("- requests_dependency_warning: none")
     print("transport and proxy context")
     print(f"- curl_cffi_default_chrome: {curl_cffi_default_chrome()}")
+    print(f"- curl_cffi_chrome_impersonate: {curl_cffi_chrome_impersonate_profile()}")
     for name in PROXY_ENV_VARS:
         configured = bool(os.getenv(name) or os.getenv(name.lower()))
         print(f"- proxy_env_{name}: {'set' if configured else 'unset'}")

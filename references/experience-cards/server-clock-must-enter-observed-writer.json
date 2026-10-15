@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "id": "server-clock-must-enter-observed-writer",
+  "status": "promoted",
+  "title": "A frozen server clock must enter the observed writer",
+  "invariant": "A local helper may freeze a server-issued clock only by injecting it into the observed writer the signer reads; freezing a quieter clock sibling such as Date.now or an inner Date constructor does not bind the request clock.",
+  "scope": {
+    "family": "signer-gated",
+    "boundary": "runtime",
+    "appliesWhen": [
+      "a local helper freezes a server-issued clock before signing",
+      "the page exposes more than one clock-looking writer such as Date.now, ajax success, a rewritten getter, or an inner Date constructor",
+      "the request copies a clock field from the signer world",
+      "the clock may enter as a signer argument or query field rather than a rewritten getter"
+    ],
+    "stopsWhen": [
+      "the signer actually reads Date.now as the observed writer",
+      "the extra clock bytes never appear on the request",
+      "injecting the observed writer already binds the request clock"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "318b645f2a9978b44571df3781d1eb5fe8e527492080185b1474572d05c31bd0",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "d64b6bb9cb7c001e627cf4ebf1536c385bea5be36f73b23ba3f792c3e8a26267",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "5ca4d443e0bc7cfc16a71d351c50d8aec81339236d2c6522017f29846d1298ea",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "843a56bf9a6e047082bf3b2ff3a5bb961bc0c95374b6951307e7eeddc8038b02",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "c17393b342c3fd3cd36bec25f768340c27fbd5973db75b41735cc75833599a51",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "ea80c0859796d55decebc929d9e1ee691c95f9539c1b5efbbd8617308c24497a",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "350c5a84cf64f36cef7dcf58f15b3a500d8a07b0eff9b6ab478267808d34f74e",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "1ac3318f46cd9d0d249b6c38b10e87b9a25ea7cdae7e4b47a3e410c2a21ff601",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "f98811a95cefc86b43f8fd3b10364c36aaced1c716809c97b8a0d60febfdbf01",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "4fe1ae073bdc1896125a420414de2a5a6e1b60d7d541227a6304e1e8bec4a52e",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "f2c8f7cf35247bcb5352282636c859ea0a5ade732af6aac9e10eff83603df17b",
+      "observedAt": "2026-09-01",
+      "artifactSha256": "4ea47ec81ae03f90affaeff477f2ddb3f32a041395f9b63d458270deb9ed8114",
+      "independent": true
+    }
+  ],
+  "fixture": {
+    "path": "references/experience-fixtures/server-clock-observed-writer-matrix.json",
+    "sha256": "24a7fe4504537ab8ace9c22840625b8d75894d2516cf998828873ef95f9d7ed3",
+    "generator": null,
+    "secretFree": true
+  },
+  "oracles": {
+    "positive": "python scripts/experience_fixture_check.py references/experience-fixtures/server-clock-observed-writer-matrix.json reports positiveOracle=true, injectsObservedWriter=true, and requestClockBound=true",
+    "negative": "setting date-now-freeze-only.oracle=true or ajax-success-clock-inject.injectsObservedWriter=false while requestClockBound=true must fail the fixture checker"
+  },
+  "firstDivergence": {
+    "stage": "helper-bootstrap",
+    "path": "clock.writer",
+    "kind": "state"
+  },
+  "decision": {
+    "preferredRoute": "iv8-runtime",
+    "action": "inject the server-issued clock into the writer the signer reads, including a signer argument or query clock field; keep a Date.now or inner Date freeze only when that getter is the observed writer",
+    "fallback": "if the signer actually reads Date.now, freeze that getter; if the extra bytes never appear on the request, treat the clock as decoy"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-09-01",
+    "command": "python scripts/experience_fixture_check.py references/experience-fixtures/server-clock-observed-writer-matrix.json"
+  }
+}

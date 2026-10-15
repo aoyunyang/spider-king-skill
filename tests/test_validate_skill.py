@@ -516,22 +516,10 @@ class DirectoryHygieneValidationTests(unittest.TestCase):
 
             self.assertEqual(result.errors, [])
 
-    def test_allows_root_github_landing_documents(self) -> None:
+    def test_rejects_root_readme_shadow_document(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "README.md").write_text("# Landing\n", encoding="utf-8")
-            (root / "DISCLAIMER.md").write_text("# Legal\n", encoding="utf-8")
-            (root / "LICENSE").write_text("MIT\n", encoding="utf-8")
-            result = validate_skill.Validation()
-
-            validate_skill.validate_directory_hygiene(root, result)
-
-            self.assertEqual(result.errors, [])
-
-    def test_rejects_root_changelog_shadow_document(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            (root / "CHANGELOG.md").write_text("# Duplicate\n", encoding="utf-8")
+            (root / "README.md").write_text("# Duplicate\n", encoding="utf-8")
             result = validate_skill.Validation()
 
             validate_skill.validate_directory_hygiene(root, result)
@@ -714,6 +702,34 @@ class OpenAIMetadataValidationTests(unittest.TestCase):
 
         self.assertTrue(
             any("must be boolean" in error for error in result.errors),
+            result.errors,
+        )
+
+    def test_restricted_fallback_accepts_current_schema(self) -> None:
+        with mock.patch.object(validate_skill, "yaml", None):
+            result = self.validate(self.valid_metadata)
+
+        self.assertEqual(result.errors, [])
+
+    def test_restricted_fallback_rejects_flow_collections(self) -> None:
+        with mock.patch.object(validate_skill, "yaml", None):
+            result = self.validate("interface: [not, allowed]\n")
+
+        self.assertTrue(
+            any("invalid agents/openai.yaml" in error for error in result.errors),
+            result.errors,
+        )
+
+    def test_restricted_fallback_rejects_duplicate_keys(self) -> None:
+        text = self.valid_metadata.replace(
+            '  display_name: "Spider King"',
+            '  display_name: "Spider King"\n  display_name: "Duplicate"',
+        )
+        with mock.patch.object(validate_skill, "yaml", None):
+            result = self.validate(text)
+
+        self.assertTrue(
+            any("duplicate mapping key" in error for error in result.errors),
             result.errors,
         )
 

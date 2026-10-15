@@ -23,15 +23,19 @@ after the outer boundary is proven insufficient.
 - [Truthful delivery classes](#truthful-delivery-classes)
 - [Evidence authority](#evidence-authority)
 - [Recovery workflow](#recovery-workflow)
+- [Nondeterministic feed alignment](#nondeterministic-feed-alignment)
 - [Pool controls](#pool-controls)
 - [Verification gates](#verification-gates)
+- [Collect-then-patch rebuild](#collect-then-patch-rebuild)
+- [Nested standard-ISA / memory-image](#nested-standard-isa-memory-image)
+- [Formal backend bakeoff](#formal-backend-bakeoff)
 - [Common traps](#common-traps)
 - [Delivery record](#delivery-record)
 
 ## Core rules
 
-1. One complete successful run is one atomic evidence unit.
-2. Instrument the narrowest stable stage boundary, not every opcode.
+1. One complete successful run is one atomic evidence unit. A nondeterministic feed (`Math.random`, `Date.now`, canvas, audio) belongs to that same unit.
+2. Instrument the narrowest stable stage boundary, not every opcode. Prefer public-boundary silent-value cards (`references/silent-value-capture-playbook.md` recipe C) before stage/opcode expansion when values are missing.
 3. Preserve unknown bytes as opaque values until evidence names them.
 4. Fixed-input byte parity is local proof; live business acceptance is final
    proof.
@@ -270,6 +274,16 @@ Keep these layers separate:
 Do not merge network exceptions into server rejection counts. A changed error
 family can prove progress without proving success.
 
+## Nondeterministic feed alignment
+
+`Math.random`, `Date.now` / `new Date`, canvas, and audio sequences are session-bound.
+
+- freeze the script hash, config/ticket, and the feed from one atomic run
+- replay the feed only into that same script; a newly downloaded script is a new session even if the URL looks stable
+- never consume an old feed with a new-session script (call counts and timing will not line up)
+- if the local host calls native sources more often than the browser because of timer-queue density, record it as timing skew, not as permission to splice feeds
+- JS-shim canvas/navigator values are fed, not probe-counted; see host-fidelity L0-L4 in `references/env-diff-playbook.md`
+
 ## Pool controls
 
 Use a prevalidated pool only when it answers a specific diagnostic question or
@@ -302,13 +316,59 @@ Pass every applicable gate:
 9. delivery class is reported truthfully
 10. final collector works without a live browser or page context
 
+
+## Collect-then-patch rebuild
+
+Use this when a host helper emits a structurally valid artifact whose environment, call-stack, or session blocks still betray the local host.
+
+1. Run the original collector/script entry on current-round inputs so behavior/event blocks stay real.
+2. Split the artifact into named blocks or stage checkpoints; compare against a clean browser success sample from the same family shape.
+3. Patch only the blocks proved to carry host/stack/session mismatch.
+4. Recompute every block checksum and the outer checksum or length field the wire format requires.
+5. Never submit a raw Node/direct-host return as the final wire value when stack or host semantics are part of the artifact.
+
+Report the rebuild as `snapshot-driven` or hybrid until every patched block is algorithmically owned. Fixed-input block parity is local proof; business accept remains final proof.
+
+## Nested standard-ISA / memory-image
+
+When reverse-trace shows a huge outer JS/WASM shell but the decisive transform reads and writes fixed memory regions:
+
+1. Prove the public entry and the bytes that cross into the inner machine.
+2. After initialization, dump the memory image or linear memory used by that entry.
+3. Identify whether the inner program is a standard ISA, a tiny custom ALU, or WASM exports with stable I/O.
+4. Replay with a standard simulator or minimal export caller from the proved PC/export; label input, work, and output regions.
+5. Keep versioned template hashes and fixed vectors for the memory machine; discard the outer emulator source once I/O parity holds.
+
+This is still exit-first. Outer-shell archaeology is a stall unless the public boundary cannot be closed.
+
+
+
+## Formal backend bakeoff
+
+When more than one local runtime can emit a candidate artifact (thin Node shim, JSDOM-like host, richer embed, or harvested-script host):
+
+1. freeze one protocol profile and one round fixture family
+2. compare layers in order: profile → lifecycle → event/input → runtime state → output
+3. do not select the formal backend by final ciphertext equality; correct backends may differ byte-for-byte
+4. promote a backend only after fresh-round server acceptance at the required smoke level
+5. keep alternate backends as diagnostics until L3/L4 evidence exists
+
+Record `formalBackend`, rejected backends, and the acceptance layer that decided the choice.
+
 ## Common traps
+
+- feeding an old `Math.random` / `Date.now` / canvas / audio sequence into a newly downloaded script
+- submitting direct host returns that embed local call stacks or host paths
+- rewriting the outer emulator instead of dumping the nested memory image after init
+- comparing only final strings without block/stage checkpoints
+- reusing a foreign-machine fingerprint or environment cache as if it were host-local truth; re-capture on the execution host or mark the surface unavailable
 
 - instrumenting every opcode before proving the wrapper boundary insufficient
 - naming opaque bytes from one sample and then randomizing them
 - fixing a later segment to hide the first divergent stage
 - mixing complete successful profiles into an unobserved combination
 - treating a high pool acceptance rate as proof of fresh generation
+- pool/profile mint-shaped offline while live gate stays rejected after morph/state-chain/companions are complete (switch writer family before more entropy)
 - embedding captured artifacts in source without provenance or expiry controls
 - calling snapshot-driven generation fully algorithmic
 - treating compile success, token shape, or helper load as live acceptance

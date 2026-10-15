@@ -25,6 +25,8 @@
 2. 入口函数、init/setup 参数或触发方式。
 3. 至少一组真实输入和预期输出/格式证据。
 
+如果目标是 JSVMP 或 SDK interceptor，先读取 `references/profiles/env-patch/references/jsvmp-interceptor-contract.md`。脚本能 load 但签名静默时，优先证明 activation、路径白名单和 transport owner，不先扩充 BOM/DOM。
+
 开始分流前读取 capability snapshot，不得假设外部技能已经安装：
 
 | 当前缺口 | 首选路由 | 专用能力不可用时 |
@@ -86,6 +88,8 @@ node "$ENV_PROFILE/tests/test-env-diagnose.js"
 
 独立 SDK 先确认 init/setup 参数、URL 匹配规则和触发顺序。缺失 init 参数可能让 SDK 静默跳过签名，不能用“加载成功”代替入口验证。
 
+同时记录目标脚本 hash/version、公开 signer 与 XHR/fetch interceptor 的所有权、query/header/body 写入槽位，以及是否存在 response/warm-up 写入。用一个命中路径和一个未命中路径做正负控制；完整合同见 `references/profiles/env-patch/references/jsvmp-interceptor-contract.md`。
+
 ### 1. 空环境诊断
 
 ```bash
@@ -96,7 +100,7 @@ node $ENV_PROFILE/scripts/env-diagnose.js --external-sandbox-confirmed <target.j
 
 ### 2. 选择最小模块
 
-按 `references/env-modules.md` 做路径前缀匹配，并按 `references/loading-order.md` 排序。每轮只增加能解释当前 first divergence 的模块。
+按 `references/profiles/env-patch/references/env-modules.md` 做路径前缀匹配，并按 `references/profiles/env-patch/references/loading-order.md` 排序。每轮只增加能解释当前 first divergence 的模块。
 
 ### 3. 重新诊断
 
@@ -121,6 +125,8 @@ node $ENV_PROFILE/scripts/env-diagnose.js \
 
 Custom patch 使用 IIFE 和 `Object.defineProperty`，保持稳定语义文件名；不要自动扫描或偷偷加载任务补丁。
 
+任何补丁都必须通过 `references/profiles/env-patch/references/no-touch-and-profile-coherence.md`：无读取证据时不改原型、构造器外形、第二个 `Function.prototype.toString` owner 或高熵 API；UA、Client Hints、navigator、screen、Canvas/WebGL 与 TLS/H2 必须来自同一浏览器家族 profile。
+
 ### 5. 循环与退出
 
 继续条件：缺失路径减少、first divergence 前移，或错误变化且有明确因果解释。
@@ -133,7 +139,7 @@ Custom patch 使用 IIFE 和 `Object.defineProperty`，保持稳定语义文件�
 
 ### 6. 功能验证
 
-`success: true` 只代表脚本加载，不代表签名、Cookie 或加密功能可用。必须在 `js_reverse_cache/tasks/<task-id>/env/run.js` 中按真实调用顺序触发入口，并与固定样本比较长度、段数、编码、前缀、关键中间值和最终输出。
+`success: true` 只代表脚本加载，不代表签名、Cookie 或加密功能可用。必须在 `js_reverse_cache/tasks/<task-id>/env/run.js` 中按真实调用顺序触发入口，并依次通过 `load-pass -> activation-pass -> fixed-vector-pass -> live-acceptance-pass`。精确固定向量必须冻结或回放时间、熵、计数器、session/round 状态和 canonical wire bytes；形状检查只能辅助定位。
 
 Hook 型 SDK 的常见顺序是：`env -> fake transport -> target JS -> capture hook -> init -> trigger`。
 
@@ -180,18 +186,21 @@ Hook 型 SDK 的常见顺序是：`env -> fake transport -> target JS -> capture
 
 ## Reference Router
 
-- `references/env-modules.md`
-- `references/loading-order.md`
-- `references/architecture.md`
-- `references/module-contracts.md`
-- `references/env-core-advanced.md`
-- `references/browser-stubs.md`
-- `references/path-upgrade-checklist.md`
-- `references/node-detection.md`
-- `references/webpack.md`
-- `references/runtime-contracts.md`
-- `references/verification-and-replay.md`
-- `references/limitations.md`
+- `references/profiles/env-patch/references/env-modules.md`
+- `references/profiles/env-patch/references/loading-order.md`
+- `references/profiles/env-patch/references/architecture.md`
+- `references/profiles/env-patch/references/module-contracts.md`
+- `references/profiles/env-patch/references/env-core-advanced.md`
+- `references/profiles/env-patch/references/browser-stubs.md`
+- `references/profiles/env-patch/references/path-upgrade-checklist.md`
+- `references/profiles/env-patch/references/node-detection.md`
+- `references/profiles/env-patch/references/webpack.md`
+- `references/profiles/env-patch/references/runtime-contracts.md`
+- `../../runtime-state-continuity-playbook.md`
+- `references/profiles/env-patch/references/jsvmp-interceptor-contract.md`
+- `references/profiles/env-patch/references/no-touch-and-profile-coherence.md`
+- `references/profiles/env-patch/references/verification-and-replay.md`
+- `references/profiles/env-patch/references/limitations.md`
 
 修改或迁移 profile 后运行：
 

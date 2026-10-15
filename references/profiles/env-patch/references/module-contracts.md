@@ -1,6 +1,6 @@
 # Env Patch Module Contracts
 
-这份参考用于设计手写补环境模块或高级 `run.js` 补丁。它不是新的触发入口，也不替代 `scripts/env-diagnose.js` 和现有 `env/` 模块树。
+这份参考用于设计手写补环境模块或高级 `run.js` 补丁。它不是新的触发入口，也不替代 `references/profiles/env-patch/scripts/env-diagnose.js` 和现有 `env/` 模块树。
 
 ## Contents
 
@@ -90,7 +90,7 @@
 
 ## Gap Log 分析脚本
 
-`scripts/analyze-gap-log.js` 可把 Proxy 观察日志或手工整理的缺口清单归并成推荐模块。
+`references/profiles/env-patch/scripts/analyze-gap-log.js` 可把 Proxy 观察日志或手工整理的缺口清单归并成推荐模块。
 
 ```bash
 node <env-profile-dir>/scripts/analyze-gap-log.js js_reverse_cache/tasks/<task-id>/env/gap-log.json
@@ -115,7 +115,7 @@ node <env-profile-dir>/scripts/analyze-gap-log.js js_reverse_cache/tasks/<task-i
 
 ## 浏览器种子采集
 
-`scripts/collect-browser-env.js` 是浏览器侧 snippet，用于 DevTools Console / Snippets。它只读取本地页面状态并打印 JSON，不做网络上传。
+`references/profiles/env-patch/scripts/collect-browser-env.js` 是浏览器侧 snippet，用于 DevTools Console / Snippets。它只读取本地页面状态并打印 JSON，不做网络上传。
 
 默认只采集非秘密的 navigator、document、location、history、screen 和 window metrics。Cookie、local/session storage 和 canvas/WebGL 默认关闭；先把脚本复制到当前任务目录，确认 first divergence 确实依赖某个字段后，才在项目副本顶部 `CONFIG` 中加入具体 Cookie/storage key 或启用 canvas。
 

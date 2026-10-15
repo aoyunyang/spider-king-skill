@@ -9,8 +9,10 @@ when real captures must be deposited without publishing reusable secrets.
 - [Core rule](#core-rule)
 - [Normalize evidence first](#normalize-evidence-first)
 - [Find the first divergence](#find-the-first-divergence)
+- [Minimal patch unit](#minimal-patch-unit)
 - [Exercise the local practice lab](#exercise-the-local-practice-lab)
 - [Deposit an experience card](#deposit-an-experience-card)
+- [Evidence freshness](#evidence-freshness)
 - [Completion gate](#completion-gate)
 
 ## Core rule
@@ -93,6 +95,23 @@ The CLI reports fingerprints rather than raw changed values. A difference in an
 earlier `Set-Cookie`, redirect, sidecar response, counter, or storage write can
 explain failure even when the final body hash is identical.
 
+### Minimal patch unit
+
+`first_divergence` is the earliest proven difference between browser truth and local output.
+Patch only the smallest causal unit that explains it: one value, one function shell, one returned object contract, or one inseparable serializer step.
+
+Each patch iteration records:
+
+1. triggering evidence id or transcript step
+2. browser expected value or behavior
+3. local actual value or behavior
+4. why this unit is the smallest honest fix
+5. whether the divergence moved later or disappeared
+
+Loading without errors, fewer logs, plausible output length, or one HTTP `200` does not prove the divergence moved. If the first divergence stays at the same path, the patch did not earn escalation.
+
+When live success exists and many layers are still open, isolate the layer first with `references/positive-sample-ablation-playbook.md`, then apply this minimal-unit rule inside that layer.
+
 ## Exercise the local practice lab
 
 Use `scripts/practice_lab.py` to verify that an implementation can distinguish
@@ -140,6 +159,18 @@ The note is not a promoted card. Keep a one-off finding in task-local
 `experience-candidate.json`; promote it only after two independent jobs and all
 schema gates pass. Add a general playbook or deterministic script only after the
 same operation remains useful across repeated cases.
+
+
+
+## Evidence freshness
+
+On continuation or after a live miss against previously good artifacts:
+
+1. recheck script/source fingerprints, request/response shape, cookie/storage transitions, and the challenge state the current test consumes
+2. if consistent, continue and record that the package was revalidated
+3. if changed, mark the old package stale, capture a new immutable package, and resume from the earliest dependent stage
+4. do not mix old dynamic state into the new session chain
+5. keep historical replay against an old package separate from live acceptance against the current package
 
 ## Completion gate
 

@@ -57,9 +57,9 @@ NEGATED_MARKER_PREFIX_RE = re.compile(
 MAX_ENTRY_NONBLANK_LINES = 280
 MAX_VALIDATION_FILE_BYTES = 16 * 1024 * 1024
 MAX_SELF_TEST_OUTPUT_BYTES = 1024 * 1024
-OFFICIAL_SUITE_TASK_COUNT = 160
+OFFICIAL_SUITE_TASK_COUNT = 191
 OFFICIAL_SUITE_CONTRACT_SHA256 = (
-    "fb40033033ecdbaf9b78f507fce48ffa8ce78ec388e6afcbc0740e23091f6a3d"
+    "d8a909cb704568aec609a85116d5e48bd4f9f117316851621f9adac8bcced7ec"
 )
 TRUSTED_SKILL_ROOT = Path(__file__).resolve().parents[1]
 MarkerGroups = tuple[tuple[str, ...], ...]
@@ -102,14 +102,10 @@ PROFILE_FALLBACK_MARKERS = (
     "不存在时",
 )
 ROOT_SHADOW_DOCUMENTS = (
+    "README.md",
     "INSTALLATION_GUIDE.md",
     "QUICK_REFERENCE.md",
     "CHANGELOG.md",
-)
-ROOT_ALLOWED_LANDING_DOCUMENTS = (
-    "README.md",
-    "DISCLAIMER.md",
-    "LICENSE",
 )
 VALIDATION_IGNORED_DIRS = frozenset(
     {
@@ -149,7 +145,7 @@ GENERATED_NOISE_SUFFIXES = (
     ".tmp",
 )
 LIFECYCLE_TASKS = {
-    "Task 0F: Capability checks do not prewarm both target browsers",
+    "Task 0F: Capability checks do not prewarm both target owners",
     "Task 0G: Normal Chrome to js-reverse handoff",
     "Task 0H: Unreplayable session state uses a retained exception",
     "Task 0I: Parked is not closed",
@@ -190,15 +186,17 @@ CLAUDE_PROJECT_FUSION_CONTRACTS: dict[
         (
             "references/startup-triage-playbook.md",
             "references/tool-playbook.md",
+            "references/silent-value-capture-playbook.md",
         ),
         (
-            ("fingerprint baseline",),
-            ("debugger trace",),
-            ("cdp bridge",),
+            ("`fingerprint-baseline`", "fingerprint-baseline"),
+            ("`debugger-trace`", "debugger-trace"),
+            ("cdp bridge", "cdp"),
             ("target_active",),
             ("sequentially",),
+            ("silent-value-capture", "silent-value"),
             ("evidence-only",),
-            ("browser-free python",),
+            ("browser-free python", "browser-free"),
         ),
     ),
     "Task 21N: The implementation brief is conditional": (
@@ -359,6 +357,8 @@ ENVIRONMENT_COHERENCE_MARKERS: MarkerGroups = (
     ("helper lockfile must stay under project root",),
     ("helper lockfile name is not a supported public lockfile",),
     ("if args.require_project_venv and not python_environment.project_dot_venv_active",),
+    ("def curl_cffi_chrome_impersonate_profile(",),
+    ("curl_cffi_chrome_impersonate",),
 )
 PROVIDER_BRIEF_MARKERS: MarkerGroups = (
     ("`compact-replay`",),
@@ -457,6 +457,7 @@ SCRIPT_SELF_TESTS = (
     ("practice_lab.py", "practice_lab_self_test=PASS"),
     ("transform_trace_diff.py", "self_test=PASS"),
     ("transport_profile_diff.py", "self_test=PASS"),
+    ("experience_fixture_check.py", "experience_fixture_self_test=PASS"),
     ("grpc_frame_inspector.py", "grpc_frame_inspector_self_test=PASS"),
     ("forward_test_report.py", "forward_test_report_self_test=PASS"),
 )
@@ -765,6 +766,11 @@ def validate_behavior(skill_text: str, result: Validation) -> None:
     required_literals = {
         "chrome-devtools": "fresh-target startup must require chrome-devtools",
         "js-reverse": "fresh-target startup must require js-reverse",
+        "fingerprint-baseline": "fresh-target startup must require fingerprint-baseline role",
+        "debugger-trace": "fresh-target startup must require debugger-trace role",
+        "silent-value-capture": "debugger-trace must include silent-value-capture as a first-class means",
+        "camoufox": "baseline host upgrade path must mention Camoufox/managed hosts",
+        "debugger_attach_gap": "attach-missing path must record debugger_attach_gap",
         "signer-gated": "signer-gated family is missing",
         "verifier-gated": "verifier-gated family is missing",
         "decode-gated": "decode-gated family is missing",
@@ -778,13 +784,37 @@ def validate_behavior(skill_text: str, result: Validation) -> None:
         "pure python": "pure Python must remain the first delivery choice",
         "browser-free": "browser-free final delivery rule is missing",
         "repeated live replay": "repeated live replay must remain an acceptance gate",
+        "do not launch a second chrome": "opening DP must not launch a second Chrome",
+        "curl impersonate": "replay identity must lock to installed curl impersonate",
+        "unproven extra routes": "unknown risk-control must not bulk-add unproven extra routes",
     }
     for literal, message in required_literals.items():
         result.require(literal in lower, message)
 
     result.require(
-        bool(re.search(r"fresh web (?:live-)?target.*chrome-devtools.*js-reverse|Start every fresh web target classified as `live-target` with evidence from both\s+`?chrome-devtools`?\s+and\s+`?js-reverse`?", skill_text, re.I | re.S)),
-        "fresh web live targets must explicitly require both first-pass tools",
+        bool(
+            re.search(
+                r"fingerprint-baseline.{0,120}debugger-trace|sequential evidence for both roles",
+                skill_text,
+                re.I | re.S,
+            )
+        )
+        and "chrome-devtools" in lower
+        and "js-reverse" in lower,
+        "fresh web live targets must require sequential fingerprint-baseline then debugger-trace roles",
+    )
+    result.require(
+        "silent-value-capture" in lower
+        and (
+            "compact-replay" in lower
+            and "collector" in lower
+            and (
+                "never owns" in lower
+                or "never put capture backends" in lower
+                or "never use" in lower
+            )
+        ),
+        "silent-value-capture must be forbidden as compact-replay/collector runtime",
     )
 
     result.require(
@@ -805,20 +835,148 @@ def validate_behavior(skill_text: str, result: Validation) -> None:
     result.require(
         "only for `artifact-only`" in lower
         and "classify it as `live-target`" in lower,
-        "focused profiles must not bypass paired evidence for fresh live-target interaction",
+        "focused profiles must not bypass sequential role evidence for fresh live-target interaction",
     )
+
+
+class RestrictedOpenAIYamlError(ValueError):
+    """Raised when fallback metadata exceeds the deliberately small YAML subset."""
+
+
+_RESTRICTED_YAML_KEY_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_-]*")
+_RESTRICTED_YAML_INTEGER_RE = re.compile(r"-?(?:0|[1-9][0-9]*)")
+_RESTRICTED_YAML_FLOAT_RE = re.compile(
+    r"-?(?:(?:0|[1-9][0-9]*)\.[0-9]+|(?:0|[1-9][0-9]*)[eE][+-]?[0-9]+)"
+)
+
+
+def _restricted_yaml_scalar(raw_value: str, *, line_number: int) -> object:
+    value = raw_value.strip()
+    if not value:
+        raise RestrictedOpenAIYamlError(f"line {line_number}: missing scalar value")
+
+    if value.startswith('"'):
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise RestrictedOpenAIYamlError(
+                f"line {line_number}: invalid double-quoted scalar"
+            ) from exc
+        if not isinstance(parsed, str):
+            raise RestrictedOpenAIYamlError(
+                f"line {line_number}: double-quoted scalar must decode to a string"
+            )
+        return parsed
+
+    if value.startswith("'"):
+        if len(value) < 2 or not value.endswith("'"):
+            raise RestrictedOpenAIYamlError(
+                f"line {line_number}: invalid single-quoted scalar"
+            )
+        inner = value[1:-1]
+        output: list[str] = []
+        index = 0
+        while index < len(inner):
+            if inner[index] != "'":
+                output.append(inner[index])
+                index += 1
+                continue
+            if index + 1 >= len(inner) or inner[index + 1] != "'":
+                raise RestrictedOpenAIYamlError(
+                    f"line {line_number}: single quotes inside a scalar must be doubled"
+                )
+            output.append("'")
+            index += 2
+        return "".join(output)
+
+    lowered = value.lower()
+    if lowered == "true":
+        return True
+    if lowered == "false":
+        return False
+    if lowered in {"null", "~"}:
+        return None
+    if _RESTRICTED_YAML_INTEGER_RE.fullmatch(value):
+        return int(value)
+    if _RESTRICTED_YAML_FLOAT_RE.fullmatch(value):
+        return float(value)
+    if value[0] in "[{&*!|>" or ": " in value or " #" in value:
+        raise RestrictedOpenAIYamlError(
+            f"line {line_number}: unsupported YAML construct in restricted fallback"
+        )
+    return value
+
+
+def load_restricted_openai_yaml(metadata_text: str) -> dict[str, object]:
+    """Parse only two-level mappings and scalar values used by agents/openai.yaml."""
+
+    document: dict[str, object] = {}
+    current_mapping: dict[str, object] | None = None
+    for line_number, raw_line in enumerate(metadata_text.splitlines(), start=1):
+        if not raw_line.strip() or raw_line.lstrip().startswith("#"):
+            continue
+        if "\t" in raw_line:
+            raise RestrictedOpenAIYamlError(
+                f"line {line_number}: tabs are not allowed in restricted YAML"
+            )
+
+        if raw_line.startswith("  "):
+            if raw_line.startswith("   ") or current_mapping is None:
+                raise RestrictedOpenAIYamlError(
+                    f"line {line_number}: expected exactly two-space mapping indentation"
+                )
+            nested_match = re.fullmatch(
+                r"  ([A-Za-z_][A-Za-z0-9_-]*):\s*(.*?)\s*",
+                raw_line,
+            )
+            if nested_match is None:
+                raise RestrictedOpenAIYamlError(
+                    f"line {line_number}: expected a scalar mapping entry"
+                )
+            key, raw_value = nested_match.groups()
+            if key in current_mapping:
+                raise RestrictedOpenAIYamlError(
+                    f"line {line_number}: duplicate mapping key {key!r}"
+                )
+            current_mapping[key] = _restricted_yaml_scalar(
+                raw_value,
+                line_number=line_number,
+            )
+            continue
+
+        top_match = re.fullmatch(
+            r"([A-Za-z_][A-Za-z0-9_-]*):\s*",
+            raw_line,
+        )
+        if top_match is None:
+            raise RestrictedOpenAIYamlError(
+                f"line {line_number}: only top-level mappings are supported"
+            )
+        key = top_match.group(1)
+        if key in document:
+            raise RestrictedOpenAIYamlError(
+                f"line {line_number}: duplicate top-level key {key!r}"
+            )
+        current_mapping = {}
+        document[key] = current_mapping
+
+    return document
 
 
 def validate_openai_metadata(metadata_text: str, result: Validation) -> None:
     if yaml is None:
-        result.errors.append("PyYAML is required to validate agents/openai.yaml")
-        return
+        try:
+            document = load_restricted_openai_yaml(metadata_text)
+        except RestrictedOpenAIYamlError as exc:
+            result.errors.append(f"invalid agents/openai.yaml: {exc}")
+            return
+    else:
+        try:
+            document = yaml.safe_load(metadata_text)
+        except yaml.YAMLError as exc:
+            result.errors.append(f"invalid agents/openai.yaml: {exc}")
+            return
 
-    try:
-        document = yaml.safe_load(metadata_text)
-    except yaml.YAMLError as exc:
-        result.errors.append(f"invalid agents/openai.yaml: {exc}")
-        return
     if not isinstance(document, dict):
         result.errors.append("agents/openai.yaml must contain a YAML mapping")
         return
@@ -1001,8 +1159,10 @@ def validate_intake_tools_and_reporting(root: Path, result: Validation) -> None:
     result.require(
         "web" in documents.get("maintenance", "").lower()
         and "chrome-devtools" in documents.get("maintenance", "").lower()
-        and "js-reverse" in documents.get("maintenance", "").lower(),
-        "skill-maintenance must keep web-scoped dual first-pass wording",
+        and "js-reverse" in documents.get("maintenance", "").lower()
+        and "fingerprint-baseline" in documents.get("maintenance", "").lower()
+        and "debugger-trace" in documents.get("maintenance", "").lower(),
+        "skill-maintenance must keep web-scoped sequential role first-pass wording",
     )
 
     require_markdown_section_markers(
@@ -1395,16 +1555,12 @@ def validate_directory_hygiene(root: Path, result: Validation) -> None:
     for _path, kind, relative in targets:
         result.errors.append(f"{kind} is not allowed in the skill package: {relative}")
 
-    scanned_names = tuple(dict.fromkeys((*ROOT_SHADOW_DOCUMENTS, *ROOT_ALLOWED_LANDING_DOCUMENTS)))
-    allowed_root_names = {name.casefold() for name in ROOT_ALLOWED_LANDING_DOCUMENTS}
-    for name in scanned_names:
+    for name in ROOT_SHADOW_DOCUMENTS:
         for path in sorted(root.rglob(name)):
             if is_validation_ignored(path):
                 continue
             relative = path.relative_to(root).as_posix()
             if path.parent == root:
-                if name.casefold() in allowed_root_names:
-                    continue
                 result.errors.append(
                     f"root shadow document duplicates SKILL.md or references: {name}"
                 )
@@ -1845,7 +2001,7 @@ def validate_forward_testing_contract(
         "forward-testing playbook must keep report validation read-only and model-independent",
     )
     result.require(
-        all(marker in playbook_lower for marker in ("fresh_context", "independent", "smoke", "full", "160", "full_pass")),
+        all(marker in playbook_lower for marker in ("fresh_context", "independent", "smoke", "full", "191", "full_pass")),
         "forward-testing playbook must distinguish fresh independent smoke and full evidence",
     )
     result.require(

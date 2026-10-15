@@ -6,7 +6,7 @@ Use this file when validating whether `spider-king` still behaves like a protoco
 
 - [How to use the suite](#how-to-use-the-suite)
 - [Pass criteria across the whole suite](#pass-criteria-across-the-whole-suite)
-- [Task catalog (160 cases)](#task-0-fresh-target-with-one-blocked-tool); search for `^## Task ` to list every case
+- [Task catalog (191 cases)](#task-0-fresh-target-with-one-blocked-tool); search for `^## Task ` to list every case
 - [Failure signals](#failure-signals)
 
 ## How to use the suite
@@ -18,9 +18,15 @@ For each task:
 3. verify the proposed delivery shape
 4. fail the test if the answer drifts into browser automation as final delivery
 
-Static validation only parses and fingerprints these contracts; it does not perform the four steps above. For a behavioral claim, use a fresh runner and independent reviewer under `references/forward-testing-playbook.md`, then validate their external response artifacts with `scripts/forward_test_report.py`. Only a passing `scope=full` report covering all 160 tasks is full-suite forward-test evidence.
+Static validation only parses and fingerprints these contracts; it does not perform the four steps above. For a behavioral claim, use a fresh runner and independent reviewer under `references/forward-testing-playbook.md`, then validate their external response artifacts with `scripts/forward_test_report.py`. Only a passing `scope=full` report covering all 191 tasks is full-suite forward-test evidence.
 
 ## Pass criteria across the whole suite
+
+- gate-family claims, runtime widening, and specialist handoff require dual-surface corroboration (`references/evidence-corroboration-gate.md`)
+- local-versus-clean-success failures use single-layer ablation after hygiene (`references/positive-sample-ablation-playbook.md`)
+- multi-slot verifier chains prove a same-world gate before isolated field rewrites (`references/parameter-ownership-playbook.md`)
+- unfinished live failures name a primary failure surface (`references/failure-surface-taxonomy.md`) and keep one pure baseline
+- workflow phase numbers match `SKILL.md` Phase 0-5; multi-stage settle and stage fields are cross-cutting, not alternate numbering
 
 - the startup gate is emitted on fresh targets
 - blocked tools are reported explicitly instead of being silently skipped
@@ -36,7 +42,7 @@ Static validation only parses and fingerprints these contracts; it does not perf
 - escalation follows one rung at a time, with the prior rung's exact failure made explicit before widening runtime, patch surface, or transport exceptions
 - reusable wins preserve 5 to 15 minimal verifiable facts that can be re-checked after an upgrade instead of only copying volatile artifacts
 - recurring shortcut temptations route to the anti-pattern library instead of being hand-waved as "temporary" exceptions
-- paired browser evidence is collected sequentially with only one `TARGET_ACTIVE` tool family
+- sequential role evidence is collected with only one `TARGET_ACTIVE` browser or engine-capture family; debugger-trace may use `js-reverse` and/or `silent-value-capture`
 - lifecycle reporting distinguishes parked tools from confirmed process closure and preserves unreplayable session state through explicit exceptions
 - intake routing distinguishes live targets, artifact-only evidence, and continuations without inventing missing proof
 - missing optional tools route to supported fallbacks through a recorded capability snapshot
@@ -308,7 +314,7 @@ Must conclude:
 - do not scale from a lucky or partial local milestone
 - require repeated live replay before pagination or concurrency
 
-## Task 0F: Capability checks do not prewarm both target browsers
+## Task 0F: Capability checks do not prewarm both target owners
 
 Prompt:
 
@@ -325,7 +331,7 @@ Must conclude:
 
 - use schemas, tool lists, or non-target health surfaces for capability confirmation when available
 - do not open the target in both tools as a startup check
-- assign initial `TARGET_ACTIVE` ownership to Chrome and defer the first js-reverse target action until handoff
+- assign initial `TARGET_ACTIVE` ownership to the fingerprint-baseline host and defer debugger-trace means (`js-reverse` and/or silent-value-capture) until sequential handoff
 
 ## Task 0G: Normal Chrome to js-reverse handoff
 
@@ -524,7 +530,7 @@ Must conclude:
 - use the browser-hook profile for a minimal reversible observation script
 - do not restart full unknown-target collector discovery
 - classify snippet-only delivery without current-target interaction as `artifact-only` and label live hit verification as unproven
-- if fresh current-target interaction becomes necessary, switch to `live-target` and apply sequential paired browser evidence
+- if fresh current-target interaction becomes necessary, switch to `live-target` and apply sequential role evidence (`fingerprint-baseline` then `debugger-trace`)
 - keep logs secret-safe and provide restore guidance
 
 ## Task 0Q: Known entry Node gap uses env-patch, load success is not enough
@@ -582,7 +588,7 @@ Expected route:
 Must conclude:
 
 - classify the work as `artifact-only` or artifact-led `evidence`
-- do not run the paired browser gate just because a URL is present
+- do not run the live sequential Startup Gate just because a URL is present
 - do not ask for project root, replay budget, or browser approvals until a gated action is needed
 - label current endpoint behavior and runtime provenance as unproven
 
@@ -642,6 +648,7 @@ Must conclude:
 - require exact scope or at least two independent high-confidence signals
 - run fixed vectors and wire-slot comparison before live replay
 - treat historical helpers as `template` or `helper-only` until current-target proof exists
+- independently proved same concat family still does not copy the sibling calculator
 
 ## Task 0W: HAR-only work stays artifact-led
 
@@ -685,12 +692,12 @@ Must conclude:
 - do not invent initiator, mutation, or live first-pass proof from unmounted tools
 - continue only with available surfaces or stop at a lower honest shape
 
-## Task 0Y: Chrome and js-reverse stay sequential
+## Task 0Y: Baseline and debugger-trace stay sequential
 
 Prompt:
 
 ```text
-Fresh web live target. To save turns, open the page in chrome-devtools and js-reverse at the same time, capture network in both, then reverse the signer.
+Fresh web live target. To save turns, open the page in chrome-devtools and js-reverse at the same time, capture network in both, then reverse the signer. If needed, also start silent-value-capture in parallel.
 ```
 
 Expected route:
@@ -698,12 +705,13 @@ Expected route:
 - `references/tool-playbook.md`
 - `references/mcp-routing-playbook.md`
 - `references/anti-patterns-playbook.md`
+- `references/silent-value-capture-playbook.md`
 
 Must conclude:
 
-- only one browser family may be `TARGET_ACTIVE`
-- never place chrome-devtools and js-reverse target actions in the same parallel batch
-- complete Chrome baseline and sequential handoff before js-reverse
+- only one browser or engine-capture family may be `TARGET_ACTIVE`
+- never place chrome-devtools, js-reverse, and silent-value-capture target actions in the same parallel batch
+- complete fingerprint-baseline and sequential handoff before debugger-trace means
 - preserve unreplayable state with `RETAINED_EXCEPTION` instead of destructive dual ownership
 
 ## Task 0Z: Environment provider start is not protocol success
@@ -770,12 +778,12 @@ Must conclude:
 - route true transport admission work through transport playbooks
 - recover application mutation and fixed-input proof separately when fields still rotate
 
-## Task 0AC: Collector cannot keep MCP browser runtime
+## Task 0AC: Collector cannot keep MCP browser or silent-value runtime
 
 Prompt:
 
 ```text
-The only stable path so far is driving the page through chrome-devtools or js-reverse for every request. Package that as a temporary collector main.py fallback.
+The only stable path so far is driving the page through chrome-devtools, js-reverse, or a silent-value-capture backend for every request. Package that engine path as a temporary collector main.py fallback.
 ```
 
 Expected route:
@@ -783,20 +791,21 @@ Expected route:
 - `references/delivery-gate-playbook.md`
 - `references/anti-patterns-playbook.md`
 - `references/mcp-routing-playbook.md`
+- `references/silent-value-capture-playbook.md`
 
 Must conclude:
 
-- browser automation and MCP page driving are not acceptable final collector run paths
+- browser automation, MCP page driving, and silent-value-capture backends are not acceptable final collector run paths
 - demote to `evidence` or `local-proof` until pure HTTP replay works
-- `main.py` / `collector/main.py` must run without MCP browser servers
-- state the remaining blocker honestly instead of disguising automation as a collector
+- `main.py` / `collector/main.py` must run without MCP browser servers or capture backends
+- state the remaining blocker honestly instead of disguising automation or engine capture as a collector
 
-## Task 0AD: Missing js-reverse blocks live understanding claims
+## Task 0AD: Missing debugger-trace means block live understanding claims
 
 Prompt:
 
 ```text
-This is a fresh live web target. chrome-devtools works, but js-reverse is unavailable in the session. Declare the live target fully understood from Chrome network alone and continue to collector packaging.
+This is a fresh live web target. chrome-devtools works, but js-reverse is unavailable in the session. No silent-value-capture backend is mounted either. Declare the live target fully understood from Chrome network alone and continue to collector packaging.
 ```
 
 Expected route:
@@ -804,20 +813,22 @@ Expected route:
 - `references/startup-triage-playbook.md`
 - `references/tool-playbook.md`
 - `references/mcp-routing-playbook.md`
+- `references/silent-value-capture-playbook.md`
 
 Must conclude:
 
-- web live first-pass requires both chrome-devtools and js-reverse evidence surfaces when claiming the live target is understood
-- report the blocked family explicitly in the capability snapshot
+- live understanding needs both roles: `fingerprint-baseline` and `debugger-trace`, not Chrome network alone
+- record `debugger_attach_gap` or the missing `js-reverse` family in the capability snapshot
+- without attach/`js-reverse` and without a silent-value backend, record `silent_value_capture_gap` or an equivalent debugger-trace blocker and do not claim the live target is understood
 - Chrome network alone does not prove initiator or canonical mutation
 - do not package a collector as if debugger-trace proof already existed
 
-## Task 0AE: Fingerprint env requires attach, not a second anonymous browser
+## Task 0AE: Fingerprint baseline upgrades host, not a second anonymous browser
 
 Prompt:
 
 ```text
-The site fingerprints automation hard. Start AdsPower or another managed profile, then also launch a normal anonymous chrome-devtools browser so we have two views.
+The site fingerprints automation hard. Start AdsPower, Camoufox, or another managed profile, then also launch a normal anonymous chrome-devtools browser so we have two views of the same target.
 ```
 
 Expected route:
@@ -825,13 +836,14 @@ Expected route:
 - `references/mcp-routing-playbook.md`
 - `references/tool-playbook.md`
 - `references/local-mcp-environment.md`
+- `references/silent-value-capture-playbook.md`
 
 Must conclude:
 
-- open or select the managed profile first when ENV is required
-- obtain the debuggable endpoint and attach evidence tools to that surface
-- do not launch a second anonymous browser for the same job as a parallel owner
-- if attach is impossible, record an ENV or capability blocker
+- treat Camoufox/managed profile as the fingerprint-baseline host only under proved pressure, not as a second concurrent owner
+- open or select the managed baseline host first; do not also launch a parallel anonymous chrome-devtools target for the same job
+- after baseline handoff, use attach/`js-reverse` when a debug endpoint exists; if attach is missing, record `debugger_attach_gap` and continue debugger-trace with silent-value-capture when a backend is available
+- if neither attach nor a silent backend can complete debugger-trace, report the capability gap instead of inventing a dual-browser ceremony
 
 ## Task 0AF: Optional MCP families belong in the capability snapshot
 
@@ -851,7 +863,7 @@ Must conclude:
 
 - record required browser families and optional passive, wire-visibility, and ENV families when relevant
 - note launch versus attach mode and whether a debuggable endpoint is known
-- capability checks must not prewarm both target browsers
+- capability checks must not prewarm both target owners
 - choose later routes only from confirmed available families
 
 ## Task 0AG: APK primary target is out of pure-web scope
@@ -989,6 +1001,8 @@ Must conclude:
 - algorithm names and digest length are not proof of a standard implementation
 - freeze one captured preimage and digest, then diff IV, round constants, packing masks, and compress masks
 - reproduce the browser-selected branch before porting constants into Python
+- Node eval of a harvested digest file is not the browser oracle
+- packing collisions are not interchangeable pages
 - validate uint32 truncation and `ROTL(x, 0)` edge cases during the Python port
 - ship a fixed-input self-check; do not call stock SM3 done
 
@@ -1032,7 +1046,7 @@ Must conclude:
 
 - page text is not wire evidence
 - keep anonymous list collection when the business response already succeeds without session
-- do not hardcode session material into the signer without fixed-sample proof
+- do not hardcode session material into the signer or RSA plaintext without fixed-sample proof
 - expose login only for the submit chain that actually requires it
 
 ## Task 4: Server returns JS bootstrap before data
@@ -1474,6 +1488,28 @@ Must conclude:
 - consecutive rejects can poison later human samples on the same exit
 - change environment intentionally and re-grade samples before more algorithm churn
 - keep protocol and environment conclusions separate in the report
+
+## Task 9M: Skip an issued challenge to protect accuracy
+
+Prompt:
+
+```text
+Each later page needs a slider image. Weak contrast makes me GET a fresh image without POSTing distant. After a later correct verify the accept body shows 66.67% and the next list call is HTTP 403. I will cap gap search at x=235 and rewrite the edge scorer.
+```
+
+Expected route:
+
+- `references/challenge-state-envelope-playbook.md`
+- `references/verifier-replay-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- unused issuance can count as a session miss; consume every issued round or abandon the session
+- submitted-wrong may be retryable on a newly issued round; skip-to-refresh is not
+- accept-body rate can be a cumulative floor; reject-body rate can be closeness
+- verifier accept below the session floor is not a business grant
+- search the full canvas and a piece-sized four-edge rectangle before retuning the scorer
 
 ## Task 10: GraphQL contract, not REST
 
@@ -2951,6 +2987,7 @@ Must conclude:
 - record SM2 component order, ECDSA DER versus fixed-width raw form, ECDH point encoding and KDF, and checksum seed, width, and byte order
 - verify primitive output separately from KDF, nonce or IV, authenticated data, component ordering, and final framing
 - keep keys and captured ciphertext task-local while promoting only secret-free layout and verification rules
+- record RSA PKCS#1 v1.5 versus textbook raw RSA; freeze the pad string before gold-token policy; gold-token inequality under random padding is padding evidence, not a custom primitive, while a proved constant PS makes gold-token equality a valid oracle
 
 ## Task 21F: Narrow env runtime contracts stay explicit and bounded
 
@@ -3097,20 +3134,21 @@ Must conclude:
 Prompt:
 
 ```text
-A fresh target needs a fingerprint-protected clean baseline, then initiator and source tracing. The current registry also exposes an optional CDP bridge. Must I choose one product route forever, or activate every browser surface at once?
+A fresh target needs a fingerprint-protected clean baseline, then initiator and source tracing. Attach may be missing. The current registry also exposes an optional CDP bridge and an optional silent-value backend. Must I choose one product route forever, or activate every browser surface at once?
 ```
 
 Expected route:
 
 - `references/startup-triage-playbook.md`
 - `references/tool-playbook.md`
+- `references/silent-value-capture-playbook.md`
 
 Must conclude:
 
-- classify fingerprint baseline, debugger trace, and CDP bridge as evidence roles selected from the current capability snapshot, not permanent vendor routes
-- use only the roles justified by the next proof and record unavailable methods or fallbacks
-- transfer `TARGET_ACTIVE` ownership sequentially and never drive the same target through multiple browser families concurrently
-- keep every browser or CDP role evidence-only and retain a browser-free Python final path
+- classify `fingerprint-baseline`, `debugger-trace`, and CDP bridge as evidence roles selected from the current capability snapshot, not permanent vendor routes
+- choose baseline means (`chrome-devtools` vs Camoufox/managed host) and debugger-trace means (`js-reverse` and/or `silent-value-capture`) from attach/backend availability
+- transfer `TARGET_ACTIVE` ownership sequentially and never drive the same target through multiple browser or engine-capture families concurrently
+- keep every browser, CDP, or silent-value role evidence-only and retain a browser-free Python final path
 
 ## Task 21N: The implementation brief is conditional
 
@@ -3192,17 +3230,679 @@ Must conclude:
 - state the Python and helper boundary, browser-free and runtime-free truth, saved artifact paths, hashes, and remaining risks
 - redact reusable secrets and keep one canonical compact handoff instead of proliferating duplicate project documents
 
+
+## Task 21R: Same-world gate before slot rewrite
+
+Prompt:
+
+```text
+Four dynamic verify fields each match the expected length and alphabet after local rebuilds, but the assembled verify request still fails. The engineer wants to rewrite each field algorithm again in isolation.
+```
+
+Expected route:
+
+- `references/parameter-ownership-playbook.md`
+- `references/verifier-replay-playbook.md`
+- `references/doctrine-index.md`
+
+Must conclude:
+
+- slot-local format success is not round success
+- prove one same-world gate: shared roundKey, identity cookies/UMID-like tokens, shared event sequence, and byte-identical canonical request for any signer
+- stop assemble/send when the gate fails; do not start another isolated algorithm rewrite first
+- route Doctrine 40 / ownership before treating the fields as independent signatures
+
+## Task 21S: One slot can have layered ownership
+
+Prompt:
+
+```text
+One request header looks like a single signature. Part of it is a pure PoW or standard-ISA memory transform, but later page markers and cookie-synced state keep rewriting it before send. The plan is to replace the whole header with one pure-Python function.
+```
+
+Expected route:
+
+- `references/parameter-ownership-playbook.md`
+- `references/local-challenge-executor-playbook.md`
+- `references/opaque-runtime-profile-playbook.md`
+
+Must conclude:
+
+- split the slot into pure-compute versus lifecycle/host-owned sublayers before rewrite
+- keep marker-ordered or stateful helper progression instead of collapsing to the final value only
+- Python may own separable compute; lifecycle rewrite stays host-owned until proved otherwise
+- do not submit a direct host return as final when stack/host blocks still need collect-then-patch
+
+## Task 21T: SDK load is not interceptor activation
+
+Prompt:
+
+```text
+A supplied JSVMP SDK parses and loads in Node with no exception, but the XHR request is unchanged. The engineer wants to mark the signer working and immediately add canvas and audio stubs.
+```
+
+Expected route:
+
+- `references/profiles/env-patch/references/jsvmp-interceptor-contract.md`
+- `references/profiles/env-patch/references/verification-and-replay.md`
+
+Must conclude:
+
+- report only `load-pass`; successful load does not prove interceptor activation or signing
+- recover the real `init`/`setup`, matcher configuration, and business-shaped trigger before widening the environment
+- require a registered-path positive control and an unregistered-path negative control
+- do not add high-entropy browser APIs without a traced read or fixed-vector divergence
+
+## Task 21U: Path registration precedes environment widening
+
+Prompt:
+
+```text
+The SDK signs `/api/items` in the browser only after `setup({paths: [...]})`. In Node the setup config is missing, `/health` stays unsigned, and the proposed fix is to patch more navigator fields.
+```
+
+Expected route:
+
+- `references/profiles/env-patch/references/jsvmp-interceptor-contract.md`
+- `references/profiles/env-patch/index.md`
+
+Must conclude:
+
+- an unregistered path is not an activation-positive test
+- recover exact setup parameters, path matching, switches, and call timing before environment work
+- replay one matching and one non-matching request with other inputs held constant
+- stop and return upstream when init or matcher evidence remains incomplete
+
+## Task 21V: XHR silence does not clear sibling transports
+
+Prompt:
+
+```text
+An XHR hook records no mutation after SDK initialization. The page also uses fetch, a worker, and a request wrapper. Declare whether the signer boundary is absent.
+```
+
+Expected route:
+
+- `references/profiles/env-patch/references/jsvmp-interceptor-contract.md`
+- `references/hook-techniques.md`
+
+Must conclude:
+
+- XHR silence proves only that the observed XHR boundary did not mutate in that run
+- inspect fetch, wrappers, workers, messages, public signers, and response or warm-up writers independently
+- correlate the business-shaped trigger with the final wire URL, headers, and body
+- do not declare the signer absent from a single silent transport
+
+## Task 21W: Interceptor load order follows reference ownership
+
+Prompt:
+
+```text
+The SDK snapshots XMLHttpRequest at load time and later replaces URLSearchParams with a polyfill. A fake XHR and URL append hook were both injected after/before the wrong owners, so capture is empty.
+```
+
+Expected route:
+
+- `references/profiles/env-patch/references/jsvmp-interceptor-contract.md`
+- `references/profiles/env-patch/references/loading-order.md`
+
+Must conclude:
+
+- install transports before an SDK that snapshots them at load time
+- install capture hooks after any target-owned replacement or polyfill they must observe
+- run `env -> fake transport -> target SDK -> capture hook -> init -> business-shaped trigger`
+- test controlled reorderings instead of interpreting an empty capture as missing behavior
+
+## Task 21X: Browser profile must remain coherent
+
+Prompt:
+
+```text
+The only good baseline is Firefox, but the patch combines its UA and navigator with Chrome Client Hints, navigator.userAgentData, a mobile screen, and Chrome TLS impersonation to make more properties exist.
+```
+
+Expected route:
+
+- `references/profiles/env-patch/references/no-touch-and-profile-coherence.md`
+- `references/profiles/env-patch/references/verification-and-replay.md`
+
+Must conclude:
+
+- keep UA, Client Hints, navigator, screen, high-entropy APIs, and TLS/H2 in one browser-family profile
+- keep profile self-coherence separate from captured-vector matching; Firefox does not gain Chrome-only APIs or become incoherent merely because it differs from a Chrome vector
+- prefer a proved absence over a plausible contradictory value
+- admit each patch only from a traced read or removable fixed-vector divergence
+
+## Task 21Y: Sign shape is not fixed-vector proof
+
+Prompt:
+
+```text
+The local sign has exactly the browser length, prefix, alphabet, and segment count, but its value differs for the same canonical request and browser profile. Can the helper be packaged as working?
+```
+
+Expected route:
+
+- `references/profiles/env-patch/references/verification-and-replay.md`
+- `references/profiles/env-patch/references/no-touch-and-profile-coherence.md`
+
+Must conclude:
+
+- shape equality is diagnostic evidence, not `fixed-vector-pass`
+- compare exact output and canonical wire bytes only after one capsule freezes or replays time, entropy, nonce/counters, session/round state, writer order, and captured profile identity
+- do not package or promote the helper while the fixed vector differs
+- stop widening after two rounds without first-divergence progress and reconsider host/runtime ownership
+
+## Task 21Z: HTTP 200 with empty business data is not acceptance
+
+Prompt:
+
+```text
+Python sends the signed request and receives HTTP 200 with an empty data array and no expected business state transition. The local signer returns a non-empty token. Report the verification level.
+```
+
+Expected route:
+
+- `references/profiles/env-patch/references/verification-and-replay.md`
+- `references/delivery-gate-playbook.md`
+
+Must conclude:
+
+- HTTP 200 and a non-empty sign do not prove `live-acceptance-pass`
+- require the expected business code, schema, identity, non-empty data, or proved state transition
+- keep Python as the owner of real HTTP; a local JS helper may own only the narrow sign boundary
+- report the highest earlier gate actually passed and inspect session, canonicalization, transport, or downstream acceptance next
+
+## Task 22: Opening DP does not launch a second Chrome
+
+Prompt:
+
+```text
+This is a live anti-bot page. I already have one target tab. Open DP / js-reverse and catch the initiator. Also start chrome-devtools in a new page so we have a second view.
+```
+
+Expected route:
+
+- `references/mcp-routing-playbook.md`
+- `references/tool-playbook.md`
+- `references/anti-debug-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- opening DP means attach/select on the current `TARGET_ACTIVE` host
+- if DP/initiator work is already required, `js-reverse` may own baseline and debugger-trace on one host
+- do not launch a second Chrome or `chrome-devtools` `new_page` for the same job
+- record `launch` vs `attach`; never pretend launch is attach
+- low-risk recon may still use `chrome-devtools` alone when DP is not required
+
+## Task 22A: Replay identity locks to installed curl impersonate
+
+Prompt:
+
+```text
+The capture browser is Chrome 152. curl_cffi DEFAULT_CHROME is chrome146. Copy 152 into User-Agent and sec-ch-ua, keep impersonate=chrome146, and restart the whole risk-control reverse because the challenge page changed.
+```
+
+Expected route:
+
+- `references/transport-pre-gate-playbook.md`
+- `scripts/check_reverse_env.py`
+- `references/profiles/env-patch/references/no-touch-and-profile-coherence.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- lock replay identity to the installed curl impersonate chrome major
+- User-Agent, Client Hints, navigator, and TLS/H2 must share that major
+- do not copy a newer live Chrome major onto a lower impersonate
+- the resulting challenge-family change is `transport-admission` / profile-drift, not a reason to restart signer reverse
+- if 146 is actually refused and only a newer ClientHello is admitted, escalate transport honestly instead of mixing majors
+
+## Task 22B: Unknown risk-control does not bulk-add unproven routes
+
+Prompt:
+
+```text
+The known business request is risk-blocked. I cannot find the risk-control writer yet. The HAR has six extra telemetry, config, log, and sibling business URLs. Add all six to the collector this round so something might pass.
+```
+
+Expected route:
+
+- `references/verifier-replay-playbook.md`
+- `references/decoy-and-real-request-playbook.md`
+- `references/failure-surface-taxonomy.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- unknown risk-control reverses the rejected request first: same-URL diff, initiator, writer, cookie mint
+- do not bulk-add unproven extra routes or expand the business workflow to hide the missing reverse
+- unproven extra routes are at most one per round and only after omission changes the oracle
+- required sidecars that pass omission and restoration stay in the contract
+- after two no-change expansion rounds, freeze the request set and keep reversing
+
+## Task 22C: Stdlib 403 of a live-admitted token is transport, not a bad signer
+
+Prompt:
+
+```text
+Sibling APIs on the same session return 200 on the stdlib client. This API returns HTTP 403 JSON forbidden on that same stdlib client even after I paste a token that an in-page fetch just used to get business 200. The mint helper touches canvas and audio, so I will rebuild those fingerprints and restart the signer reverse.
+```
+
+Expected route:
+
+- `references/transport-pre-gate-playbook.md`
+- `references/crypto-patterns.md`
+- `references/anti-patterns-playbook.md`
+- `references/environment-patch-playbook.md`
+
+Must conclude:
+
+- sibling-200 plus this-route-403 is not session death
+- replay the same admitted token or cookie bytes on stdlib versus installed curl impersonate before restarting signer reverse
+- if impersonate returns business 200, the 403 was transport admission, not a bad token
+- do not escalate canvas, audio, or WebGL as the remaining HTTP gate after that admission
+- lock replay identity to the installed curl impersonate chrome major
+
+
+## Task 23: HTML placeholder zeros are not business data without a list XHR
+
+Prompt:
+
+```text
+The page table already shows ten zeros. There is no list XHR in the network log. Sum the zeros, submit, and call the collector done. The bundle is a JSVMP so I will also start opcode dumps in parallel.
+```
+
+Expected route:
+
+- `references/decoy-and-real-request-playbook.md`
+- `references/jsvmp-analysis-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- HTML placeholder zeros are not business data when no list XHR or fetch fired
+- debug observation or activation first, not the payload schema
+- do not scrape or sum the DOM numbers
+- do not start opcode dumps because the table looks numeric
+
+## Task 23A: CDP webdriver true can silence a JSVMP XHR
+
+Prompt:
+
+```text
+Chrome CDP shows navigator.webdriver === true. The JSVMP loaded but never sent the list request. Open Camoufox, wrap XHR toString, and treat the baseline as burned.
+```
+
+Expected route:
+
+- `references/anti-debug-playbook.md`
+- `references/environment-patch-playbook.md`
+- `references/tool-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- a JSVMP can skip the business XHR while `navigator.webdriver` is true
+- if `Navigator.prototype.webdriver` is configurable, delete it in an authorized initScript and recapture
+- do not wrap XHR or `toString` on a signature-bound VM
+- do not open Camoufox for a webdriver boolean
+- record `launch` vs `attach`; never pretend launch is attach
+
+## Task 23B: Protobuf serializeBinary and wasm encode beat JSVMP opcodes
+
+Prompt:
+
+```text
+The list body is unreadable and the page is a huge JSVMP. Dump opcode handlers until the token appears. A protobuf serializeBinary and a wasm encode(i32,i32) exist, but bytecode is the real work.
+```
+
+Expected route:
+
+- `references/jsvmp-analysis-playbook.md`
+- `references/structured-transport-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- protobuf `serializeBinary` and wasm `encode(i32,i32)` are public boundaries
+- freeze request and response hex at the serializer or XHR send before opcode work
+- regenerate fresh clock-bucket fields through the same encoder; a second int32 may be client-chosen if the token remains `encode(t1,t2)`
+- stale captured clock-bucket plus token pairs 403 even when the schema is right
+- opcode work starts only after that public I/O is insufficient
+
+## Task 23C: UTF-8 MCP dumps are not protobuf bytes
+
+Prompt:
+
+```text
+I saved the protobuf request with the MCP network tool. The file looks binary but Python cannot decode it. The VM must be wrong. Restart opcode recovery from the saved body.
+```
+
+Expected route:
+
+- `references/structured-transport-playbook.md`
+- `references/tool-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- text-oriented MCP or DevTools dumps can decode binary as UTF-8 and write `U+FFFD`
+- recapture ArrayBuffer or hex at `serializeBinary` or XHR send
+- do not restart opcode work because a UTF-8 dump is unreadable
+- compare hex length and field tags, not printable strings
+
+## Task 24: Empty ajax beforeSend is not a signer
+
+Prompt:
+
+```text
+The page ajax has a beforeSend hook. The hook is an empty IIFE, so a hidden token writer is missing. Start JSVMP reverse, mint a sign field, and ignore that the captured list body already equals the visible page and keyword fields.
+```
+
+Expected route:
+
+- `references/transport-wrapper-playbook.md`
+- `references/transport-pre-gate-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- an empty or no-op `beforeSend` IIFE is not a missing token writer
+- freeze the captured body and diff it against the visible business fields
+- if they match, skip signer or JSVMP reverse
+- next is stdlib-versus-impersonate ablation on those same bytes when replay still fails
+
+## Task 25: Named AES with 8-byte short ciphertext is DES/3DES
+
+Prompt:
+
+```text
+The helper is CryptoJS.AES.encrypt with ECB PKCS7 and a 16-byte Utf8 key. The live token is 64 bytes, so I will port AES-128. Node without navigator emits a different 88-character token; I will strip debugger from WordArray.clamp until gold matches. Textbook AES-128 of the same plaintext is the collector.
+```
+
+Expected route:
+
+- `references/crypto-patterns.md`
+- `references/patched-helper-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- freeze a short plaintext; 8-byte ciphertext means 64-bit blocks (DES/3DES), not AES-128
+- a 16-byte key plus a 16-aligned longer token is not AES proof
+- CryptoJS `algo.AES.blockSize === 2` / `keySize === 6` is Triple DES wearing an AES name
+- a Node miss can be a navigator/location catch-path that reorders DES key slices; port the browser branch
+- do not strip `debugger` to force gold-token equality
+- require live business accept; keep the missing-navigator order as a negative control
+
+## Task 26: Dummy HTTP sibling does not retire a WebSocket list
+
+Prompt:
+
+```text
+The table already shows zeros. GET and POST of the similarly named REST path return HTTP 200 JSON with a constant filler. Sum the dummy HTTP body or the DOM zeros and submit. Ignore the WebSocket.
+```
+
+Expected route:
+
+- `references/decoy-and-real-request-playbook.md`
+- `references/structured-transport-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- HTML placeholder zeros are not business data
+- HTTP 200 dummy filler on a sibling REST path is not the list contract
+- freeze one live WebSocket or text business frame before summing
+- mixed-transport dummy on HTTP does not retire a WebSocket channel
+- do not scrape or sum the DOM zeros
+
+## Task 27: Chrome-devtools HTTP log is not a WebSocket inventory
+
+Prompt:
+
+```text
+chrome-devtools list_network_requests shows only document, css, and js. The HTML table started as zeros and the DOM later filled with numbers. There is no XHR. Conclude there is no list API, scrape the DOM, and unpack the packed inline script as a local data blob.
+```
+
+Expected route:
+
+- `references/tool-playbook.md`
+- `references/decoy-and-real-request-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- chrome-devtools `list_network_requests` is an HTTP resource inventory, not a WebSocket inventory
+- HTML zeros plus later DOM numbers still need a list-channel proof
+- hook `WebSocket` constructor/send/message or use `js-reverse` `get_websocket_messages`
+- do not scrape the DOM or treat the packed script as the list because the HTTP log was empty
+
+## Task 28: First short WebSocket text is not the list
+
+Prompt:
+
+```text
+The WebSocket send is the page index. The first inbound text is a short constant. JSON.parse that frame or add the constant into the page sum. After sending the next page, the first recv is the same constant, so conclude the socket cannot multiplex and restart signer reverse.
+```
+
+Expected route:
+
+- `references/structured-transport-playbook.md`
+- `references/anti-patterns-playbook.md`
+
+Must conclude:
+
+- classify inbound WebSocket text before JSON parse
+- skip non-object prefix, ack, or heartbeat frames
+- keep reading until the business JSON object
+- one recv landing on the prefix is not reuse failure and not a missing signer
+- do not sum the short constant frame
+
+## Task 29: Compile snapshot is real key material
+
+Prompt:
+
+```text
+eval and new Function compile a helper after substituting params. I wrapped Function.prototype.apply and call globally, then treated the later invocation as the key. Recover the rule.
+```
+
+Expected route:
+
+- `references/silent-value-capture-playbook.md`
+- `references/hook-techniques.md`
+- `references/jsvmp-analysis-playbook.md`
+
+Must conclude:
+
+- the compile body after param substitution is key material
+- a later call is only execution, not the snapshot
+- use recipe G / Function-constructor Proxy, not a global apply/call wrap
+- never wrap global Function.prototype.apply or call
+
+## Task 30: New session script cannot consume old feed
+
+Prompt:
+
+```text
+I downloaded a fresh SDK, then replayed yesterday's Math.random, Date.now, canvas, and audio sequence. The helper crashes or mints a different artifact. Recover the rule.
+```
+
+Expected route:
+
+- `references/opaque-runtime-profile-playbook.md`
+
+Must conclude:
+
+- nondeterministic feeds are session-bound to one script hash
+- never run a new-session script against an old feed
+- recapture, or replay the old script with the old feed
+
+## Task 31: Host-fidelity is L0-L4, not canvas probe counts
+
+Prompt:
+
+```text
+The local host calls canvas.toDataURL and navigator the same number of times as the browser, so I marked L0 fidelity pass and skipped value-feed and protocol param-set checks. Recover the rule.
+```
+
+Expected route:
+
+- `references/env-diff-playbook.md`
+- `references/environment-patch-playbook.md`
+
+Must conclude:
+
+- host-fidelity is L0 native count / L1 sequence LCS / L2 value feed / L3 protocol param-set / L4 eval sha256
+- canvas and navigator JS shims cannot be probe-counted as L0
+- shim values are fed from the same session, not counted
+
+## Task 32: Expose webpack require instead of mounting UI
+
+Prompt:
+
+```text
+The webpack SDK encrypts only after Vue $mount. Headless layout, transition, and getWidth stubs keep crashing, so I keep widening the DOM. Recover the rule.
+```
+
+Expected route:
+
+- `references/environment-patch-playbook.md`
+- `references/profiles/env-patch/references/webpack.md`
+
+Must conclude:
+
+- expose `__wpRequire` from the webpack bootstrap
+- call the encrypt export with frozen args
+- do not start by completing `$mount`
+- patch UI crash points only after the export is unreachable
+
+## Task 33: setTimeout must not be sync; fromCharCode heat diagnoses VM entry
+
+Prompt:
+
+```text
+The host has no event loop, so setTimeout(fn) calls fn immediately. Top-level load hangs. fromCharCode heat is 0, so I add more canvas stubs. Recover the rule.
+```
+
+Expected route:
+
+- `references/environment-patch-playbook.md`
+- `references/jsvmp-analysis-playbook.md`
+
+Must conclude:
+
+- setTimeout must queue a macro-task and never run the callback synchronously
+- drive the queue with `__drainTimers__`; setInterval returns 0 on no-native hosts
+- fromCharCode heat million vs 0 diagnoses VM entry
+- zero heat means the VM never entered; more canvas stubs will not create it
+
+## Task 34: Source class is orthogonal to ownership class
+
+Prompt:
+
+```text
+A field is local-algorithm, so I labeled it python-owned and ported it, even though it only exists inside harvested challenge scripts. Another field is plaintext so I treated it as the same recovery move. Recover the rule.
+```
+
+Expected route:
+
+- `references/parameter-ownership-playbook.md`
+
+Must conclude:
+
+- source class is fixed / plaintext / local-algorithm / server-issued / risk-interactive
+- ownership class is python-owned / host-owned / server-owned
+- the two columns are orthogonal; local-algorithm can still be host-owned
+- do not mix plaintext and local-algorithm as one recovery move
+
+## Task 35: Visual box center is not drag origin; OCR is not collector runtime
+
+Prompt:
+
+```text
+The platform returns a gap box. I drag from the box center and import an OCR client into the collector so production can call the platform. Recover the rule.
+```
+
+Expected route:
+
+- `references/local-challenge-executor-playbook.md`
+- `references/delivery-gate-playbook.md`
+
+Must conclude:
+
+- drag origin is box x1, not center
+- OCR or captcha-platform is diagnostic only
+- never ship that client as collector runtime
+- a placeholder-answer compact-replay is not an auto-solver
+
+## Task 36: Wide except must not swallow import bugs as platform down
+
+Prompt:
+
+```text
+Optional extras are wrapped in except Exception. ImportError and NameError look like the vendor is down, so the collector silent-falls back and prints debug on stdout. Recover the rule.
+```
+
+Expected route:
+
+- `references/delivery-gate-playbook.md`
+
+Must conclude:
+
+- import / NameError is our bug and must alarm on stderr
+- external timeout may fallback
+- leftover except Exception still alarms
+- key responses go to stderr; stdout stays machine JSON
+
 ## Failure signals
 
 Fail the skill revision immediately if it does any of these:
 
 - accepts browser automation as final delivery
 - treats every hard target as only a sign-recovery problem
+- finishes each dynamic verify slot as an independent signature without a same-world consistency gate
 - ignores transport envelopes or decode chains
 - asks the user for giant manual bundle review instead of narrowing the target
 - returns vague success without replay proof
 - routes MCP families from disk presence instead of the mounted tool registry
 - opens chrome-devtools and js-reverse target actions in the same parallel batch
+- launches a second Chrome because the user asked to open DP
+- copies a newer live Chrome major onto a lower curl impersonate and restarts risk-control reverse
+- treats stdlib 403 of a live-admitted token as a bad signer or WAF without stdlib-versus-impersonate ablation on the same bytes
+- restarts canvas, audio, or WebGL reverse after impersonate plus the current helper already returns business 200
+- bulk-adds unproven extra APIs when risk-control is unknown instead of reversing the rejected request
 - treats environment-provider start, passive capture, or PCAP visibility as collector proof
 - keeps MCP browser runtime or page driving inside the final collector path
 - invents chrome-devtools plus js-reverse first-pass for out-of-scope APK/app/mini-program primary tasks or pure artifact work
+- treats Chrome network alone as full live understanding when debugger-trace means are missing
+- defaults Camoufox or a managed profile for ordinary low-risk targets without fingerprint pressure
+- ships silent-value-capture backends or engine instrumentation inside `compact-replay` or `collector`
+- refuses available silent-value-capture after `debugger_attach_gap` even though debugger-trace is still required
+- treats SDK load success as interceptor activation
+- patches a browser profile with contradictory family, high-entropy, or TLS claims without evidence
+- accepts sign length, alphabet, prefix, or non-empty output as fixed-vector proof
+- demands exact fixed-vector equality without freezing or replaying every observed time, entropy, counter, session/round, canonical-byte, and profile input
+- calls HTTP 200 with empty or rejected business data collector success
+- treats HTML placeholder zeros as business data when no list XHR fired
+- upgrades Camoufox because CDP `navigator.webdriver` is true instead of deleting the configurable prototype property
+- chases JSVMP opcodes after protobuf `serializeBinary` or wasm `encode(i32,i32)` already rebuilds the body
+- trusts UTF-8 MCP or DevTools dumps as protobuf bytes
+- treats an empty ajax `beforeSend` IIFE as a missing signer when the captured body equals the visible fields
+- treats a named AES helper as AES-128 because a longer token is 16-aligned without a short-vector block-size check
+- treats a Node miss of a named cipher as patched AES without comparing host-object catch-path key order to the browser branch
+- treats HTTP 200 dummy filler or HTML zeros as the list while a WebSocket or text channel is unproven
+- copies impersonate document-class default headers onto a WebSocket handshake without ablating handshake header class on the same admitted token
+- treats chrome-devtools HTTP resource logs as a WebSocket inventory
+- JSON-parses or sums the first short WebSocket text frame without classifying frame types
+- skips an issued challenge image or token to protect accuracy, then treats the later 403 as an algorithm miss
+- treats eval/Function compile snapshots as ordinary call traces, or wraps global Function.prototype.apply/call
+- feeds an old Math.random/Date.now/canvas/audio sequence into a new-session script
+- counts canvas or navigator JS-shim probes as host-fidelity L0
+- mounts webpack UI instead of exposing require to call the encrypt export
+- implements setTimeout as a synchronous callback, or ignores fromCharCode heat as VM-entry diagnosis
+- mixes source class with ownership class, or treats plaintext and local-algorithm as one recovery move
+- uses visual-box center as drag origin, or ships OCR/captcha-platform as collector runtime
+- swallows import/NameError with a wide except as platform down, or prints key responses on stdout

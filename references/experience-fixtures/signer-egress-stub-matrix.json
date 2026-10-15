@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "kind": "signer-egress-stub-matrix",
+  "scope": "one helper world, one observed library-ajax callsite, one success-and-complete continuation",
+  "observedCallsite": "library-ajax",
+  "observedContinuation": "success-and-complete",
+  "rows": [
+    {
+      "profile": "xhr-send-only",
+      "wrapsObservedCallsite": false,
+      "firesObservedContinuation": false,
+      "followUpIssued": false,
+      "secondPageHarvested": false,
+      "oracle": false
+    },
+    {
+      "profile": "ajax-success-without-complete",
+      "wrapsObservedCallsite": true,
+      "firesObservedContinuation": false,
+      "followUpIssued": true,
+      "secondPageHarvested": false,
+      "oracle": false
+    },
+    {
+      "profile": "ajax-success-and-complete",
+      "wrapsObservedCallsite": true,
+      "firesObservedContinuation": true,
+      "followUpIssued": true,
+      "secondPageHarvested": true,
+      "oracle": true
+    },
+    {
+      "profile": "returned-export-instead-of-ajax-harvest",
+      "wrapsObservedCallsite": false,
+      "firesObservedContinuation": false,
+      "followUpIssued": false,
+      "secondPageHarvested": false,
+      "oracle": false
+    }
+  ],
+  "negativeControl": {
+    "mutation": "wrap XMLHttpRequest.send only, fire library-ajax success without complete, or harvest a returned export instead of the observed ajax field",
+    "expected": "follow-up missing or second page unsigned, oracle=false"
+  },
+  "scopeBoundary": {
+    "routeLocal": true,
+    "stopsWhen": [
+      "the signer is a returned export rather than an egress harvest",
+      "the observed callsite plus its continuation already yields the follow-up field",
+      "the missing field follows clock, key, or session mutation rather than the stub"
+    ]
+  }
+}

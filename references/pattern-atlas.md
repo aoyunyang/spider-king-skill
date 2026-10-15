@@ -12,8 +12,10 @@ Use this file when the target already resembles a recurring pattern and you want
 - [Pattern F: Answer or data is account-bound](#pattern-f-answer-or-data-is-account-bound)
 - [Pattern G: Tiny side assets carry the whole signer](#pattern-g-tiny-side-assets-carry-the-whole-signer)
 - [Pattern H: Dynamic fonts hide the payload](#pattern-h-dynamic-fonts-hide-the-payload)
+- [Pattern H2: CSS-in-HTML sprites hide the numbers](#pattern-h2-css-in-html-sprites-hide-the-numbers)
 - [Pattern I: One-shot verifier, captcha, or click challenge](#pattern-i-one-shot-verifier-captcha-or-click-challenge)
 - [Pattern I2: Cloud verifier multi-stage transcript](#pattern-i2-cloud-verifier-multi-stage-transcript)
+- [Pattern I3: Issued challenge must be consumed](#pattern-i3-issued-challenge-must-be-consumed)
 - [Pattern J: Response data is encoded, compressed, or split](#pattern-j-response-data-is-encoded-compressed-or-split)
 - [Pattern K: Transport is GraphQL, WebSocket, or a binary envelope](#pattern-k-transport-is-graphql-websocket-or-a-binary-envelope)
 - [Pattern L: Public page still hides a bootstrap envelope](#pattern-l-public-page-still-hides-a-bootstrap-envelope)
@@ -31,6 +33,7 @@ Use this file when the target already resembles a recurring pattern and you want
 - [Pattern X: Polling reuses a historical successful task](#pattern-x-polling-reuses-a-historical-successful-task)
 - [Pattern Y: First-create and regenerate are different contracts](#pattern-y-first-create-and-regenerate-are-different-contracts)
 - [Pattern Z: Challenge rewrites the business URL](#pattern-z-challenge-rewrites-the-business-url)
+- [Pattern AA: SDK loads but signs only registered request paths](#pattern-aa-sdk-loads-but-signs-only-registered-request-paths)
 
 ## Pattern A: The endpoint on the page is fake
 
@@ -54,6 +57,7 @@ Symptoms:
 - page code builds `token`
 - wire sends `m`, `f`, or another field
 - request wrapper mutates data before send
+- a swallowed `call()` return or field `m` is assigned but never sent
 
 Action:
 
@@ -67,11 +71,17 @@ Symptoms:
 
 - `md5`, `btoa`, `atob`, `sha1`, or similar names exist
 - local reproduction with standard libraries does not match browser output
+- ascii hashlib and digit-byte hashlib both miss a frozen timestamp
+- a hasher calls `eval` or `setInterval(eval)` on a recovered function string
 
 Action:
 
 - freeze fixed test vectors
 - port the exact helper implementation
+- port the browser branch; do not eval the harvested file in Node as the oracle
+- named JSEncrypt/JSBN/RSA under statement-split is still standard padding; freeze the pad string before gold-token policy; random PKCS#1 inequality is not a custom port
+- keep the bundled helper after hashlib dual miss; stub hasher-internal eval/timers; never execute recovered R
+- a nearby charcode array is not T constants until a frozen vector needs those values
 - verify helper outputs before using them in requests
 
 ## Pattern D: First response is not data, but bootstrap
@@ -103,6 +113,10 @@ Action:
 - diff headers and cookies by page
 - test page-specific `User-Agent`, referer, or ordering rules
 - encode the exception narrowly
+- prove necessity with a one-variable negative control
+- reject HTTP 200 plus a hint or string array unless the typed business payload appears
+- do not copy the last-page profile onto sibling pages
+- packing collisions are not interchangeable pages; keep the live clock refresh
 
 ## Pattern F: Answer or data is account-bound
 
@@ -148,6 +162,22 @@ Action:
 - derive the codepoint-to-digit map
 - decode the payload locally
 
+## Pattern H2: CSS-in-HTML sprites hide the numbers
+
+Symptoms:
+
+- list JSON is readable, but each cell is stacked images or spans with extra classes and `left` offsets
+- the request body is only a page index or id; no sign field appears on the wire
+- companion fields such as `key` and `value` sit next to the HTML
+
+Action:
+
+- tag `decode-gated`; do not invent a signer
+- derive the hide class from companion fields on a fixed vector, then drop those nodes
+- place remaining glyphs by `inFlowWidth * visibleIndex + leftOffset`
+- identify glyphs by image-byte or pixel hash, not CSS class names
+- route to `references/response-decode-playbook.md`
+
 ## Pattern I: One-shot verifier, captcha, or click challenge
 
 Symptoms:
@@ -178,7 +208,25 @@ Action:
 - enforce shared baseline and sparse delta consistency
 - separate structure, sidecar, timeline, answer, and environment risk surfaces
 - package dual-runtime helpers only as local compute, with Python owning HTTP
-- read `references/verifier-replay-playbook.md`, `references/verifier-error-localization-playbook.md`, and `references/positive-sample-hygiene-playbook.md`
+- split verifier gateway accept, server grant, and business oracle; gateway-only success is stage success
+- read `references/verifier-replay-playbook.md`, `references/parameter-ownership-playbook.md`, `references/verifier-error-localization-playbook.md`, and `references/positive-sample-hygiene-playbook.md`
+
+## Pattern I3: Issued challenge must be consumed
+
+Symptoms:
+
+- GET/init of a slider or puzzle image, then a later page 403s even after a correct verify
+- accept body shows simple fractions (`50%`, `66.67%`, `83.33%`) after skipped images
+- reject body shows messy closeness percentages on a submitted-wrong answer
+- gap search never looks past an arbitrary x cap and latches onto a tall dark column
+
+Action:
+
+- consume every issued round or abandon the session
+- split unused-issue (session miss) from submitted-wrong (often retryable)
+- treat accept-rate as a cumulative floor and reject-rate as closeness until proved otherwise
+- search `0 .. width - piece_width` and score a piece-sized four-edge rectangle
+- read `references/challenge-state-envelope-playbook.md` and `references/verifier-replay-playbook.md`
 
 ## Pattern J: Response data is encoded, compressed, or split
 
@@ -187,6 +235,7 @@ Symptoms:
 - HTTP status is normal but payload looks like gibberish, digit soup, escaped code, glyphs, or binary
 - business data only appears after a decode helper, font map, protobuf parser, or compression layer
 - the response body shape changes after a local decode step, not after another request
+- schema-valid JSON numeric strings fail `int()` because of CR/LF
 
 Action:
 
@@ -194,6 +243,7 @@ Action:
 - trace the first consumer of the raw payload
 - identify decode order, keys, maps, or parsers
 - rebuild the decoder locally
+- strip CR/LF from numeric strings before `int` or sum; do not invent a cipher
 - validate local decode on the exact captured payload before scaling
 
 ## Pattern K: Transport is GraphQL, WebSocket, or a binary envelope
@@ -207,9 +257,10 @@ Symptoms:
 Action:
 
 - document the transport kind explicitly
-- freeze one known-good message or body sample
+- freeze one known-good message or body sample as hex or ArrayBuffer, not a UTF-8 MCP dump
 - separate envelope fields from business fields
 - identify which fields are signed, sequenced, or server-assigned
+- regenerate clock-bucket protobuf fields through the public encoder; a second int32 may be client-chosen if the token remains `encode(t1,t2)`
 - replay one stable message locally before attempting full stream collection
 
 ## Pattern L: Public page still hides a bootstrap envelope
@@ -309,6 +360,7 @@ Symptoms:
 - the same route behaves differently across UA families, ALPN, or HTTP versions
 - mobile or app UA, impersonated TLS, or HTTP/1.1 passes while default desktop or stdlib traffic fails
 - a sibling auth, identity, or business route bypasses a challenged landing route
+- stdlib returns HTTP 403 JSON forbidden with a live-admitted token, while impersonate returns business 200 on those same bytes
 
 Action:
 
@@ -316,6 +368,7 @@ Action:
 - map a narrow matrix of route, client stack, UA family, and HTTP version before loading giant bundles
 - keep any passing transport profile scoped only to the blocked route family that needs it
 - continue application-layer reversing only after one clean admitted baseline exists
+- do not restart signer or canvas reverse when impersonate plus the current helper already returns business 200
 
 ## Pattern R: Challenge runtime already knows the answer
 
@@ -453,3 +506,23 @@ Action:
 - use a local challenge executor when needed
 - prove whether app signer headers are still required after rewrite
 - read `references/challenge-artifact-harvest-playbook.md`, `references/local-challenge-executor-playbook.md`, and `references/dual-writer-param-playbook.md`
+
+## Pattern AA: SDK loads but signs only registered request paths
+
+Symptoms:
+
+- the SDK parses and loads without error, but the captured request is unchanged
+- HTML placeholder zeros appear and no list XHR fired while `navigator.webdriver` is true
+- a public signer works while XHR or fetch remains silent, or only one transport signs
+- output appears only for some paths, methods, headers, or body shapes
+- the sign has the expected length and alphabet but fails a browser fixed vector
+
+Action:
+
+- treat load and interceptor activation as separate gates
+- if CDP `navigator.webdriver` is true, delete the configurable prototype property in initScript before Camoufox or opcode work
+- recover `init`/`setup`, path whitelist, feature switches, load order, and the exact business-shaped trigger before adding environment APIs
+- test one registered path and one unregistered path as positive and negative controls
+- inspect public signer, XHR, fetch, URL/header/body, and response/warm-up channels independently
+- trust the final wire-shaped URL, headers, and body over an internal return value
+- read `references/profiles/env-patch/references/jsvmp-interceptor-contract.md`, `references/profiles/env-patch/references/no-touch-and-profile-coherence.md`, and `references/profiles/env-patch/references/verification-and-replay.md`

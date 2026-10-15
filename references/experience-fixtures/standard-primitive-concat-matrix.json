@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "kind": "standard-primitive-concat-matrix",
+  "scope": "one captured digest, one caller string, one constant-pool suffix",
+  "primitive": "md5",
+  "caller": "abc",
+  "constantPoolSuffix": "POOL",
+  "capturedDigest": "4ad091c44ce6ca5b018abe741ee03f22",
+  "rows": [
+    {
+      "profile": "unsalted-caller",
+      "join": "caller",
+      "digestMatchesCaptured": false,
+      "oracle": false
+    },
+    {
+      "profile": "caller-plus-suffix",
+      "join": "caller+suffix",
+      "digestMatchesCaptured": true,
+      "oracle": true
+    },
+    {
+      "profile": "suffix-plus-caller",
+      "join": "suffix+caller",
+      "digestMatchesCaptured": false,
+      "oracle": false
+    }
+  ],
+  "negativeControl": {
+    "mutation": "hash the caller string without the constant-pool suffix",
+    "expected": "digestMatchesCaptured=false and oracle=false"
+  },
+  "scopeBoundary": {
+    "routeLocal": true,
+    "stopsWhen": [
+      "the unsalted caller already matches the captured digest",
+      "constant-pool prefix and suffix joins both miss after packing, encoding, and IV or round checks",
+      "the captured alphabet or length is a different primitive family",
+      "a host-object property read is observed entering the preimage"
+    ]
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "id": "standard-primitive-concat-before-custom-port",
+  "status": "promoted",
+  "title": "Recover constant-pool concat before porting a custom digest",
+  "invariant": "When a named textbook digest or cipher misses a captured digest or key, prove prefix and suffix joins against recovered constant-pool or derived strings before rewriting IVs, round functions, or compress steps.",
+  "scope": {
+    "family": "signer-gated",
+    "boundary": "request",
+    "appliesWhen": [
+      "a helper is named or fingerprinted as a textbook digest or block cipher",
+      "the unsalted caller, plaintext, or apparent key misses the captured digest or wire field",
+      "constant-pool, data-segment, or derived strings are available as concat or slice candidates"
+    ],
+    "stopsWhen": [
+      "the unsalted caller already matches the captured digest",
+      "prefix and suffix joins both miss after packing, encoding, and IV or round checks",
+      "the captured alphabet or length is a different primitive family",
+      "a host-object property read is observed entering the preimage"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "a7eb60326a80f398a4eee9cdc15e9269bfec028303a1fd11b4399bff7c44082f",
+      "observedAt": "2026-08-25",
+      "artifactSha256": "fec2bbb43b20a7f35564e498e349e72fdf8232cceb3ec62cebeaae722f2cc504",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "ee1e944bf0298943af830d21a75acd61eb050a0a2aabd067e44df0b5d332a004",
+      "observedAt": "2026-08-25",
+      "artifactSha256": "cc58c7266efd06b9323f46bffd25a7f98fc7d53095924b2797363e62a49f043a",
+      "independent": true
+    }
+  ],
+  "fixture": {
+    "path": "references/experience-fixtures/standard-primitive-concat-matrix.json",
+    "sha256": "e388e9215e283f4ffdb49e305546ae6869208b626a3d3e2c77629f494235c73d",
+    "generator": null,
+    "secretFree": true
+  },
+  "oracles": {
+    "positive": "python scripts/experience_fixture_check.py references/experience-fixtures/standard-primitive-concat-matrix.json reports positiveOracle=true, concatMatched=true, and unsaltedMissed=true",
+    "negative": "setting unsalted-caller.digestMatchesCaptured=true or changing capturedDigest away from md5(caller+suffix) must fail the fixture checker"
+  },
+  "firstDivergence": {
+    "stage": "5-keys-salts-ivs",
+    "path": "preimage.join",
+    "kind": "framing"
+  },
+  "decision": {
+    "preferredRoute": "crypto-patterns",
+    "action": "freeze the captured digest, test unsalted then prefix and suffix joins against recovered constant-pool or derived strings, and keep the textbook primitive when a join hits",
+    "fallback": "if prefix and suffix joins both miss, open packing, encoding, IV, and round-function checks instead of inventing a new primitive name"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-08-25",
+    "command": "python scripts/experience_fixture_check.py references/experience-fixtures/standard-primitive-concat-matrix.json"
+  }
+}

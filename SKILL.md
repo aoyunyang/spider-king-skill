@@ -1,6 +1,6 @@
 ---
 name: spider-king
-description: "Pure-web protocol reverse skill: turn hostile browser clients into browser-free Python collectors. Auto-judge intake and tool path from signals: artifact-only first when samples suffice; for a fresh web live-target, collect sequential fingerprint-baseline then debugger-trace evidence (default chrome-devtools then js-reverse; upgrade baseline host to Camoufox/managed profile only on fingerprint pressure); for continuation, reuse the current gate when target and environment are unchanged. Route only mounted web-relevant MCP families. Out of primary scope: APK, native app, and mini-program reverse as the main path. Use for hostile web sign, token, cookie, WebSocket, GraphQL, protobuf, response-decode, browser-fingerprint, WebAssembly, challenge-bootstrap, dynamic-font, or protocol-collector flows."
+description: "Pure-web protocol reverse skill: turn hostile browser clients into browser-free Python collectors. Auto-judge intake and tool path: artifact-only when samples suffice; fresh web live-target needs sequential fingerprint-baseline then debugger-trace (default chrome-devtools then js-reverse; if DP is already required js-reverse may own both roles on one host and must not launch a second Chrome; replay identity locks to installed curl impersonate; unknown risk-control does not bulk-add unproven extra routes; Camoufox/managed baseline only on fingerprint pressure; silent-value-capture is a first-class debugger-trace means when attach is missing or page-world capture is insufficient/observer-toxic). Continuation reuses the current gate. Route only mounted web MCP families. Out of scope as primary path: APK, native app, mini-program. Use for hostile web sign, token, cookie, WebSocket, GraphQL, protobuf, response-decode, fingerprint, WASM, challenge-bootstrap, dynamic-font, or protocol-collector flows."
 ---
 
 # Spider King
@@ -13,24 +13,27 @@ This is a pure-web protocol-recovery skill, not a browser-automation skill and n
 
 ## Non-Negotiables
 
-- Before any tool choice on a fresh task, run the Auto Judge Card in this file and `references/mcp-routing-playbook.md`: decide intake, whether a browser is needed, which baseline host to use, and whether `js-reverse` is required. Do not open tools first and rationalize later.
-- Start every fresh web target classified as `live-target` with sequential evidence for both roles before claiming that live web target is understood: `fingerprint-baseline` then `debugger-trace`. Default means are `chrome-devtools` then `js-reverse`. When fingerprint pressure is proved, the baseline host may be Camoufox or another managed profile; debugger-trace still prefers `js-reverse` only after a real handoff and only when a debug attach surface exists. This skill's primary scope is web clients only; APK, native app, and mini-program primary tasks are out of scope and must not invent paired-browser proof as ceremony. If a required role or its available means is missing for a web live-target, report the blocker before claiming the live target is understood.
-- Keep browser evidence collection target-serial: at most one tool family may be `TARGET_ACTIVE`, and never place both families in the same parallel tool batch. Apply the handoff gate in `references/tool-playbook.md`; preserve unique unreplayable state with `RETAINED_EXCEPTION` instead of destroying it for cleanup.
-- For `compact-replay` and `collector`, deliver a browser-free Python run path. Never use browser automation, Playwright, Selenium, CDP page-driving, page-context fetch, browser profiles, or manual browser state as the final replay path or fallback.
-- Prefer pure Python for HTTP, orchestration, parsing, retries, persistence, and output.
-- Keep JS or WASM only as a tiny local helper when a verified Python port would currently be riskier. Helpers must not depend on live `window`, `document`, browser storage, page driving, or manual clicks.
-- A local bootstrap executor may emulate required host semantics, but Python must own live HTTP. State clearly whether delivery is browser-free only or fully runtime-free.
-- Recover one stable business request before pagination, concurrency, submission, or runtime shrinking.
+- Before any tool choice on a fresh task, run the Auto Judge Card in this file and `references/mcp-routing-playbook.md`: decide intake, whether a browser is needed, which baseline host to use, and which debugger-trace means to use (`js-reverse` and/or `silent-value-capture`). Do not open tools first and rationalize later.
+- Start every fresh web target classified as `live-target` with sequential evidence for both roles before claiming that the page/runtime is understood: `fingerprint-baseline` then `debugger-trace`. The only narrower claim is the `transport-only direct-endpoint exception` in `references/startup-triage-playbook.md`: it may accept a collector for one exact endpoint without claiming page/runtime understanding, and only after its strict negative-control and business-oracle gates pass.
+- Default means are baseline `chrome-devtools` then debugger-trace `js-reverse`. If DP/initiator work is already required, `js-reverse` may own both roles on one host; do not launch a second Chrome. Record `launch` vs `attach` and never pretend launch is attach. Upgrade the baseline host to Camoufox or another managed profile only on proved fingerprint pressure or clean-baseline failure; never default Camoufox for ordinary low-risk work or because CDP `navigator.webdriver` is true.
+- Satisfy `debugger-trace` with correlated initiator/mutation proof from `js-reverse`, correlated `silent-value-capture` cards under `references/silent-value-capture-playbook.md`, or both. Prefer `js-reverse` when attach exists.
+- If attach is missing, record `debugger_attach_gap` and continue debugger-trace via `silent-value-capture` when a backend is available instead of abandoning the role. If a needed silent backend is also missing, record `silent_value_capture_gap` and continue offline or lower the delivery shape.
+- Silent-value-capture never replaces baseline and never owns `compact-replay` or `collector` delivery. APK, native app, and mini-program primary tasks remain out of scope and must not invent paired-browser proof as ceremony. If a required role cannot be satisfied by any available means, report the blocker before claiming the live target is understood.
+- Keep browser and engine-capture evidence collection target-serial: at most one browser or engine-capture family may be `TARGET_ACTIVE`, and never place two target owners in the same parallel tool batch. Apply the handoff gate in `references/tool-playbook.md`; park or retain baseline before granting silent-value engine capture; preserve unique unreplayable state with `RETAINED_EXCEPTION` instead of destroying it for cleanup.
+- For `compact-replay` and `collector`, deliver a browser-free Python run path. Never use browser automation, Playwright, Selenium, CDP page-driving, page-context fetch, browser profiles, manual browser state, silent-value-capture backends, or engine instrumentation as the final replay path or fallback.
+- Prefer pure Python for HTTP, orchestration, parsing, retries, persistence, and output. Keep JS/WASM only as a tiny local helper when a verified Python port would be riskier; a local bootstrap may emulate host semantics, but Python owns live HTTP and the report states browser-free/runtime-free truth. Replay identity locks to the installed curl impersonate chrome major; do not copy a newer live Chrome major onto a lower impersonate or restart risk-control reverse for that drift.
+- Recover one stable business request before pagination, concurrency, submission, or runtime shrinking. Unknown risk-control reverses the rejected request first; unproven extra routes are at most one per round and only after omission changes the oracle.
+- When a local JS/WASM/SDK helper is called repeatedly in one browser-shaped workflow, treat process/VM/context identity and hidden mutable state as moving parts; prove persistent-world versus fresh-world behavior before shrinking or widening the helper, and do not reuse a self-invalidating instance as a pager.
 - Back every conclusion with the evidence its declared shape requires. Require repeated live replay only when claiming current live acceptance. Keep raw sensitive values local; redact credentials, tokens, personal data, and cookie values from chat, reports, and version control.
-- Never hardcode rotating state before proving its writer, slot, scope, expiry, and refresh path.
-- Preserve one session chain for bootstrap-heavy flows until cross-session reuse is proven.
+- Never hardcode rotating state before proving its writer, slot, scope, expiry, and refresh path; preserve one session chain for bootstrap-heavy flows until cross-session reuse is proven.
 - Stop only when the declared shape passes its capability-specific gate or a real external blocker is proved. Do not label `evidence` or `local-proof` as a collector, and do not disguise incomplete automation as a temporary collector.
 - `compact-replay` and `collector` delivery include a PyCharm right-click runnable Python entrypoint, normally project-root `main.py` or `collector/main.py`, with no required terminal arguments. `evidence` and `local-proof` do not require an entrypoint unless the requested artifact is executable code.
-- Route only MCP families confirmed available in the current agent tool registry or schema. Source trees on disk are not availability.
-- Passive wire stores such as Reqable or HAR may coexist with a browser `TARGET_ACTIVE` owner, but they do not replace web live first-pass evidence and must not become the final run path.
-- `compact-replay` and `collector` must remain free of MCP browser runtime, page driving, and profile-bound operation.
+- Route only MCP families confirmed in the current tool registry/schema; disk source trees are not availability. Passive wire stores may coexist with `TARGET_ACTIVE` but do not replace live first-pass evidence, and `compact-replay`/`collector` remain free of browser runtime, page driving, profiles, capture backends, and engine instrumentation.
 
-For failure-shaped counterexamples, read `references/anti-patterns-playbook.md`. Before packaging a result, apply only the matching capability gate from `references/delivery-gate-playbook.md`.
+- Before hardening a gate-family label, widening runtime, or handing work to an installed specialist, pass `references/evidence-corroboration-gate.md`. One status code, cookie name, token name, old note, or plausible helper output is only a hypothesis.
+- When a trusted positive sample passes and the local path fails, use `references/positive-sample-ablation-playbook.md` after sample hygiene. Name unfinished live failures with `references/failure-surface-taxonomy.md` instead of implying collector completion. When stuck, pick one Stuck next action from that file; do not bulk-add unproven extra routes.
+
+For failure-shaped counterexamples, read `references/anti-patterns-playbook.md`. Before packaging a result, apply only the matching capability gate from `references/delivery-gate-playbook.md`. Graded degrade: import/`NameError` is our bug (alarm on stderr); external timeout is fallback. Print key responses to stderr; keep stdout machine JSON.
 
 ## Lightweight Dispatch
 
@@ -43,7 +46,7 @@ Use these labels internally to keep the first move small. Do not force a rigid m
 | `compact-replay` | one bounded right-click runnable replay for a proved request |
 | `collector` | repeatable browser-free Python collector with bounds |
 
-Default to the smallest shape that answers the user. User-provided HAR, packet capture, request text, JS/WASM, cookie/token sample, fixed vector, or existing project artifact starts as `evidence` or `local-proof`; do not open a browser just to satisfy live-target ceremony. A bare URL by itself does not authorize browser navigation, live replay, writes, account/session use, dependency installation, or broad collection.
+Default to the smallest shape that answers the user. User-provided HAR, packet capture, request text, JS/WASM, cookie/token sample, fixed vector, or existing project artifact starts as `evidence` or `local-proof`; do not open a browser just to satisfy live-target ceremony. `evidence` and `local-proof` must not auto-start dual-role browser ceremony. A bare URL by itself does not authorize browser navigation, live replay, writes, account/session use, dependency installation, or broad collection.
 
 Route names describe the current capability owner, not the gate family: `evidence-reuse`, `chromium-recon`, `browser-hook`, `static-ast`, `env-patch`, `iv8-local-runtime`, `verifier`, `transport`, `pure-python-rebuild`, or `python-collector`. Run one route until it returns evidence or a named blocker. If two routes look plausible, pick the smaller offline route first and record what proof would justify escalation.
 
@@ -58,44 +61,53 @@ Use a focused route when the goal is already narrow. Do not restart full unknown
 | Paste-ready browser observation Hook at a known boundary | `references/profiles/browser-hook-snippets/index.md` |
 | Structured Babel AST restoration of a supplied JS file | `references/profiles/static-ast/index.md` |
 | Known entry + invocation + fixed browser output in Node/VM | `references/profiles/env-patch/index.md` |
+| JSVMP/SDK loads but XHR or fetch signing stays silent or path-dependent | `references/profiles/env-patch/references/jsvmp-interceptor-contract.md`; prove activation with positive and negative path controls; if CDP `navigator.webdriver` is true, delete the configurable prototype property in initScript before Camoufox; HTML zeros with no list XHR are not data |
 | Fixed-trace pure-Python signer/decoder rebuild or regression | `references/pure-python-rebuild-playbook.md` |
 | Unknown or multi-layer end-to-end collector | Continue Startup Gate + Universal Reverse Loop below |
 | Entry/call-chain location only | Dedicated reverse skill when available; else `chrome-devtools` / `js-reverse` initiator evidence |
 | Explicit Python + iv8 runtime | iv8 skill when available; if unavailable, report the unmet constraint and use env-patch/local helper only after the user accepts that substitution |
-| Confirmed CAPTCHA/TDC or family-owned protocol | Matching specialist skill when available; Spider stays secondary runtime help only |
+| Narrow installed specialist matches a corroborated blocker | Handoff only when capability snapshot lists that specialist and dual-surface corroboration passes; Spider stays secondary runtime help. If no specialist is installed, stay on the generic loop—do not invent a family shortcut |
 | Already-captured HAR, Reqable history, or request text to explain or draft replay | `evidence-reuse`; read `references/mcp-routing-playbook.md` before opening browsers |
 | Fingerprint or managed profile required before evidence | Auto-judge high fingerprint pressure -> Camoufox/managed host baseline, then attach/`js-reverse` handoff when debug endpoint exists |
 | Enough HAR/request/JS/cookie sample and no fresh live proof needed | `artifact-only` / `evidence-reuse`; do not open Camoufox, Chrome, or `js-reverse` for ceremony |
 
 Focused profile rules:
 
-- Browser-hook, static-ast, and env-patch routes may skip the full unknown-target Startup Gate ceremony only for `artifact-only` or already-proved known-boundary work, but still require reversible changes and secret-safe logs. Structure-only static AST detection may begin from the supplied file alone; require fixed samples before behavioral claims or dynamic escalation. If the route needs fresh interaction with a current target, classify it as `live-target` and apply the paired sequential browser rule above.
-- If a profile uncovers missing bootstrap, session, transport, decode, or pagination state, exit the profile and return to the Universal Reverse Loop.
-- Process artifacts go under the executing project `js_reverse_cache/tasks/<task-id>/` (`task.json`, `network.jsonl`, `runtime-evidence.jsonl`, `handoff.json`, `fixtures/`, `report.md`). Delivery proof remains `analysis/proof_manifest.json` and related analysis files. Never write task secrets into this skill directory. Apply `references/project-artifact-contract.md` before the first save or promotion.
+- Browser-hook, static-ast, and env-patch may skip unknown-target ceremony only for `artifact-only` or proved known-boundary work, with reversible changes and secret-safe logs; structure-only AST detection may start from supplied source but needs fixed samples for behavioral claims. If fresh interaction is required, classify it as `live-target` and require sequential role evidence; missing bootstrap, session, transport, decode, or pagination state exits the profile to the Universal Reverse Loop.
+- Process artifacts go under the executing project `js_reverse_cache/tasks/<task-id>/` (`task.json`, `network.jsonl`, `runtime-evidence.jsonl`, `silent_value/` when used, `handoff.json`, `fixtures/`, `report.md`). Delivery proof remains `analysis/proof_manifest.json` and related analysis files. Never write task secrets into this skill directory. Apply `references/project-artifact-contract.md` before the first save or promotion.
 
 ## Auto Route Card
 
-Use this before tool choice. It does not relax any delivery gate.
-Full signal tables and host-upgrade rules live in `references/mcp-routing-playbook.md` and `references/startup-triage-playbook.md`.
+Use this before tool choice. It does not relax any delivery gate. Full signal tables and host-upgrade rules live in `references/mcp-routing-playbook.md` and `references/startup-triage-playbook.md`.
 
 ### Auto Judge Card (signal-driven)
 
 Judge in this order and record the branch before the first target action:
 
 1. **Intake**: enough offline samples and no live acceptance need -> `artifact-only`; bare URL or fresh page/session proof -> web `live-target`; same target/env/goal -> `continuation`; APK/app/mini-program primary -> out of scope.
-2. **Browser needed?**: pure offline explain/restore/fixed-vector work -> no browser; need current request/page/wire proof -> baseline host; known-boundary debugger only -> `js-reverse` after attach owner is confirmed.
-3. **Baseline host**: default `chrome-devtools`; upgrade to Camoufox/managed host only on fingerprint pressure or clean-baseline failure; never default Camoufox for ordinary low-risk work.
-4. **Debugger**: after a candidate business request exists and attach is available, sequential handoff to `js-reverse`; if attach is missing, export artifacts, record `debugger_attach_gap`, and continue offline.
-5. **Stop browser early**: once the real request, mutation point, and rebuild path are proved, leave browser MCP and finish in pure Python.
+2. **Browser/engine needed?**: pure offline explain/restore/fixed-vector work -> no browser; need current request/page/wire proof -> baseline host; known-boundary value or initiator work -> debugger-trace means after baseline handoff (`js-reverse` and/or `silent-value-capture`).
+3. **Baseline host**: default `chrome-devtools` for ordinary low-risk recon. If DP/initiator work is already required, let `js-reverse` own baseline and debugger-trace on one host; do not launch a second Chrome. Upgrade to Camoufox/managed host only on fingerprint pressure or clean-baseline failure; never default Camoufox for ordinary low-risk work.
+4. **Debugger-trace means**: after a candidate business request exists, select means without abandoning the role:
+   - attach available -> default `js-reverse` on the current host after sequential handoff; record `launch` mode instead of disguising it as attach
+   - upgrade triggers (observer-toxic hooks, systematic miss, need fixed-input vectors, JSVM public-boundary values missing, page self-check distrusting page-world) -> enable `silent-value-capture` immediately; do not widen page-world hooks first
+   - attach missing -> record `debugger_attach_gap`; if a silent-value backend is available, continue debugger-trace via `silent-value-capture`; else continue offline
+   - no silent backend when needed -> record `silent_value_capture_gap` and continue offline or lower delivery shape; an exact direct endpoint may use the transport-only exception only if every entry condition in `references/startup-triage-playbook.md` is independently proved
+5. **Debugger-trace role complete when any holds**: correlated initiator/mutation proof from `js-reverse`; or one or more correlated `fixed_input_ready` silent-value cards; or both. Prefer public boundary I/O over opcode/whole-program traces; protobuf `serializeBinary` and wasm `encode(i32,i32)` count. Never place capture backends in `compact-replay` or `collector`.
+6. **Stop browser/engine early**: once the real request, mutation point, and rebuild path are proved, leave browser MCP and any silent-value backend, then finish in pure Python.
 
 ### Default live sequence
 
 ```text
-capability snapshot
+capability snapshot (browser mode launch|attach|unavailable, curl impersonate max chrome, silent_backend)
   -> Auto Judge
-  -> fingerprint-baseline (chrome-devtools default; Camoufox/managed host only on pressure)
-  -> sequential handoff
-  -> js-reverse when attach exists
+  -> fingerprint-baseline (chrome-devtools default; js-reverse may own both roles when DP is already required; Camoufox/managed host only on pressure)
+  -> sequential handoff (park/retain baseline)
+  -> debugger-trace means (branch, not a linear tail):
+       attach? yes -> js-reverse first
+                 + silent-value-capture on upgrade triggers
+       attach? no  -> debugger_attach_gap
+                 + silent-value-capture if backend available
+                 else offline continue
   -> offline rebuild + delivery gate
 ```
 
@@ -114,7 +126,7 @@ Declare one mode before tool use:
 
 ### 1. Environment and tools
 
-Snapshot installed MCP families, attach/debug availability, and optional passive wire stores. Route only confirmed tools. Missing optional families are gaps, not ceremony.
+Snapshot installed MCP families, browser mode (`launch`|`attach`|`unavailable`), known debug endpoint, curl impersonate max chrome from `scripts/check_reverse_env.py`, optional silent-value backend availability (`silent_backend=available|absent`), and optional passive wire stores. Route only confirmed tools. Missing optional families or backends are gaps, not ceremony. If `silent_backend=absent`, do not probe capture backends; after attach/js-reverse gaps, continue offline or lower the delivery shape.
 
 ### 2. Family triage
 
@@ -137,36 +149,38 @@ Before implementing a `compact-replay` or `collector`, use the conditional imple
 
 ## Universal Reverse Loop
 
-Use `references/workflow-overview.md` as the short execution map and `references/tool-playbook.md` for tool selection.
+Use `references/workflow-overview.md` as the short execution map and `references/tool-playbook.md` for tool selection. Phase numbers below are the only phase numbering system; multi-stage settle and stage-field bundles are cross-cutting checklists mapped in that file.
 
 ### Phase 0: Fingerprint
 
-- Capture a clean baseline before broad hooks when observer effect is possible.
-- Distinguish decoy from real endpoint, transport gate from application gate, visible param from wrapper rewrite, bootstrap asset from data API, and single request from stateful transcript.
-- Identify plain JSON, GraphQL, WebSocket, protobuf, binary envelope, encrypted response, glyph mapping, JSVMP, or host-bound runtime early.
+- Capture a clean baseline before broad hooks when observer effect is possible; distinguish decoy from real endpoint, transport from application gate, visible param from wrapper rewrite, bootstrap from data API, a single request from a stateful transcript, and HTML placeholder zeros from list-XHR data, dummy HTTP siblings from WebSocket or text channels, chrome-devtools HTTP logs from WebSocket frames, and non-JSON WebSocket prefix frames from business JSON.
+- Identify plain JSON, GraphQL, WebSocket, protobuf, binary envelope, encrypted response, glyph mapping, CSS-in-HTML sprite or offset glyphs, JSVMP, or host-bound runtime early. Prefer protobuf `serializeBinary` / wasm `encode` over opcodes; capture binary as hex, not UTF-8 dumps.
 - Choose the smallest next proof, not the largest bundle dump.
 
 ### Phase 1: Prove the real request
 
-- Follow redirects and wrapper or compatibility pages.
-- Map entry, bootstrap, list, detail, submission, verifier, warm-up, telemetry, download, risk-control, and async export or report job routes separately.
+- Follow redirects and wrapper/compatibility pages, mapping entry, bootstrap, list, detail, submission, verifier, warm-up, telemetry, download, risk-control, and async export/report routes separately.
 - Capture exact URL, method, query, body bytes, headers, outbound Cookie header, response shape, and initiator.
 - Treat pagination pivots and challenged document replays as part of the protocol contract.
+- When the same direct endpoint and business input diverge only by client transport, run the same-input matrix and negative control in `references/transport-pre-gate-playbook.md` here, before signer or environment work. If it meets every `transport-only direct-endpoint exception` condition in `references/startup-triage-playbook.md`, scope acceptance to that endpoint and keep browser-role gaps explicit.
 
 Deliver one confirmed request on the real business path.
 
 ### Phase 2: Isolate moving state
 
-Classify every changing part: timestamp, nonce, signed query or body, rotating header or cookie, wrapper field, operation name, cursor, bootstrap artifact, decode key, glyph map, session secret, profile baseline, sparse delta, counter, heartbeat, elapsed-time dependency, media key, page exception, account state, or host semantic.
-When the surface is an export or signed open platform style API, also bucket fields into business, static app, server-issued, and per-request dynamic classes before designing regeneration.
+Answer the static analysis six questions in `references/minimal-verifiable-facts-playbook.md` before declaring the mutation model known.
 
-Prove cookie provenance and distinguish server-issued artifacts from locally minted filler. Treat page text about session participation as a hypothesis only until wire behavior confirms it. When login is only the first gate, validate tenant, role, and data-range with a final identity reread before export; see `references/multi-context-session-playbook.md`. Keep stored jar state separate from the authoritative outbound Cookie header when they diverge.
+Classify every changing part: timestamp, nonce, signed query or body, rotating header or cookie, wrapper field, operation name, cursor, bootstrap artifact, decode key, glyph map, session secret, profile baseline, sparse delta, counter, heartbeat, elapsed-time dependency, media key, page exception, account state, or host semantic.
+Also classify helper lifetime, VM/context identity, module instances, closures, caches, queues, lazy initialization, and call-order markers when the same local runtime serves more than one request or step; explicit counter/cookie replay does not prove continuity.
+When the surface is an export or signed open platform style API, also bucket fields into business, static app, server-issued, and per-request dynamic classes before designing regeneration. Independently label source class (`fixed` / `plaintext` / `local-algorithm` / `server-issued` / `risk-interactive`) and ownership class (`python-owned` / `host-owned` / `server-owned`); never treat source as ownership.
+
+Prove cookie provenance and distinguish server-issued artifacts from locally minted filler. Treat page text about session participation as a hypothesis only until wire behavior confirms it. When login is only the first gate, validate tenant, role, and data-range with a final identity reread before export; see `references/multi-context-session-playbook.md`. Keep stored jar state separate from the authoritative outbound Cookie header when they diverge. When business replay fails against a browser success packet, recover the request contract with `references/session-contract-playbook.md` before deepening signer work.
 
 ### Phase 3: Locate the canonical mutation point
 
 Trace in this order:
 
-1. transport wrappers, interceptors, `beforeSend`, fetch, Ajax, XHR, worker, or message boundaries
+1. transport wrappers, interceptors, `beforeSend`, fetch, Ajax, XHR, worker, or message boundaries; freeze the wire: an empty `beforeSend` IIFE is not a signer
 2. bootstrap scripts and inline payloads
 3. exposed helpers and returned child objects
 4. WASM exports or inner serializer, packer, signer, or decoder primitives
@@ -175,27 +189,34 @@ Trace in this order:
 
 The canonical mutation point is where the wire-shaped payload actually changes, not where business code creates a placeholder.
 
-When a named digest is present, prove it on fixed inputs before trusting a standard library. Prefer environment-selected digest constants and the browser branch over UI or function names; route to `references/crypto-patterns.md`.
+When a named digest or named AES/GCM/WASM export is present, prove it on fixed inputs and freeze frame, packed-key layout, and inner-field PRNG before trusting a standard library. Prefer environment-selected digest constants and the browser branch over UI or function names; route to `references/crypto-patterns.md`. When ALU traces show `0x9E3779B9` or a VM packs 4-character little-endian blocks, route to the same file.
 
 ### Phase 4: Rebuild offline
 
-- Climb one rung at a time: fixed-input parity, narrow boundary observation, pure local reproduction, narrow host bootstrap, then evidence-backed host-surface patching.
+- Multi-surface verifier rejects after mint-shaped tokens: ablate morph/state-chain first, fill day-card + kill-switches K1-K8, and treat gold-similarity as false progress (`references/verifier-morph-and-state-chain-playbook.md`).
+- Same-family solved skeleton present: migrate host/path/state-chain first (`references/case-reuse-playbook.md`); do not reopen a behavior-wall mainline.
+- Climb one rung at a time: fixed-input parity, narrow boundary observation, pure local reproduction, narrow host bootstrap, then evidence-backed host-surface patching. When stage counts differ from the browser path, follow the multi-stage settle rule in `references/workflow-overview.md` before algorithm rewrites. Inside a rung, patch only the `first_divergence` minimal unit from `references/reproducible-evidence-playbook.md`, and revalidate evidence freshness on continuation.
+- For repeated helper calls, run the minimal continuity matrix in `references/runtime-state-continuity-playbook.md` before adding browser APIs: one persistent world, one fresh world, and one explicit-state ablation with other inputs held constant where possible.
 - Before escalating, record the last proved artifact, exact blind spot, why the next rung is smallest, and how browser-free delivery remains intact.
 - Read `references/escalation-ladder-playbook.md` before widening runtime, patch surface, or transport profile.
 - When transport evidence proves that the closest maintained backend cannot express the admitted browser profile, read `references/native-transport-profile-playbook.md` before building a route-local native adapter.
-- When an opaque staged artifact still depends on captured runtime inputs, read `references/opaque-runtime-profile-playbook.md`; preserve one atomic run, port stage by stage, and distinguish algorithmic generation from snapshot-driven generation or pool replay.
+- When an opaque staged artifact still depends on captured runtime inputs, read `references/opaque-runtime-profile-playbook.md`; preserve one atomic run, port stage by stage, and distinguish algorithmic generation from snapshot-driven generation or pool replay. Nondeterministic feeds (`Math.random` / `Date.now` / canvas / audio) are session-bound; never run a new-session script against an old feed.
 - Preserve exact serialization, field slot, framing, JSONP callback, delimiter, compression, cipher, and decode order.
 - When porting JS digests to Python, validate uint32 truncation, `ROTL` edge cases, and per-byte packing masks on a frozen preimage before live replay.
 - For string-table-heavy bundles, begin with the non-executing `references/profiles/static-ast/index.md` detector and conservative rewrite, then recover the decoder offline with a two-pass rewrite before deep beautify work; see `references/obfuscation-guide.md` and `references/offline-inline-deob-playbook.md`.
 - Regenerate request-shaped artifacts inside the request loop when page, keyword, body, referer, timestamp, or session state can change them.
+- If persistent-world and fresh-world behavior differ, keep the narrow local helper alive for the proved sequence and record initialization, lifetime, reset, timeout, cleanup, and runtime version; if the persistent world self-invalidates after the first encrypt, isolate or port that encrypt instead of paging with the burned instance; do not treat a per-call subprocess as a neutral implementation detail.
 
 ### Phase 5: Prove repeatability and scale
 
+`references/workflow-overview.md` packages this phase as **Phase 5: Deliver** (prove repeatability + delivery packaging). Same phase number; not a second system.
+
 - Verify helpers and decoders against fixed-input or fixed-payload vectors.
 - Prove one fresh single-page replay on one session chain before scaling or shrinking runtimes.
-- Require repeated live replay at least two to three times; helper load success or plausible token shape is not acceptance.
-- For verifier-gated flows, prove required sidecars, shared-state consistency, actual request timing, final verifier semantics, and the first downstream consumer on one complete round. Keep the hard order above; record an ablation matrix and a local error-semantic map before scaling retries.
-- For verifier-gated flows, prove positive-sample hygiene: clean success samples outrank contaminated automation failures. Environment risk (exit IP, automation marks, consecutive failures) is a separate failure surface from track quality.
+- Require repeated live replay at least two to three times (verifier gates: 10-20 when claiming stability on hard-gate metric); helper load success or mint-shaped tokens are not acceptance.
+- For verifier-gated flows with fingerprint/device companions, read `references/device-trust-sidecar-playbook.md` and name delivery level L0-L3; local SDK runtime patching is `references/local-sdk-env-patch-playbook.md`.
+- For verifier-gated flows, prove required sidecars, same-world shared-state, one protocol profile, actual request timing, final verifier semantics, and the first downstream consumer on one complete round. Keep the hard order above; record an ablation matrix and a local error-semantic map before scaling retries.
+- For verifier-gated flows, prove positive-sample hygiene: clean success samples outrank contaminated automation failures. Environment risk (exit IP, automation marks, consecutive failures) is a separate failure surface from track quality; classify with `references/failure-surface-taxonomy.md` and isolate layers with `references/positive-sample-ablation-playbook.md` when local replay disagrees with a clean success sample.
 - Prove the next page or cursor, route pivots, refresh behavior, field completeness, and relevant permission boundaries.
 - For async exports, prove create with a pre-create task-id snapshot plus condition match, isolate the polled task, and block persistence when downloaded columns are thinner than requested fields; see `references/async-export-job-playbook.md`.
 - Save raw samples early and fail loudly on unexpected response shapes.
@@ -207,17 +228,19 @@ When a named digest is present, prove it on fixed inputs before trusting a stand
 - Keep stable scaffolding separate from volatile captures and generated runtime blobs.
 - Catalog server-issued and locally computed state separately.
 - Keep bootstrap-heavy acquisition and replay on one session chain until reuse is proven.
+- Keep one baseline pure across UA/Client-Hints, cookies/storage, fingerprint surfaces, and transport/exit; see `references/env-diff-playbook.md`. Distinguish a Chrome page-world replica from a local DOM host. Score host-fidelity L0-L4 (native count / sequence LCS / value feed / protocol param-set / eval sha256; not device-trust L0-L3 and not smoke L1-L4); canvas or navigator JS shims cannot be probe-counted. Do not feed foreign fingerprint caches into the run path (`references/environment-patch-playbook.md`).
 - Treat wire egress as authoritative when it differs from intermediate getters, callbacks, or cookie jars.
 - Test transport admission separately when traffic dies before application semantics.
 - Keep deterministic proof mode separate from live-generation mode.
 - Keep every final helper self-contained and free of runtime-backed predecessor imports.
+- When a final helper is stateful, make its lifecycle explicit and test both continuity and intentional reset; Python still owns live HTTP and the helper must not become a browser substitute.
 - Reuse existing solved helpers only through `references/case-reuse-playbook.md`: match by exact scope or multiple independent signals, run fixed vectors first, and never promote copied secrets or historical notes as current proof.
 
 Use `scripts/scaffold_reverse_project.py` for a Python-first project, `scripts/protocol_diff.py` for request or response deltas, `scripts/transport_profile_diff.py` for structured TLS and H2 profile deltas, `scripts/transform_trace_diff.py` for staged runtime parity, and `scripts/crypto_fingerprint.py` for preliminary encoding or digest hints.
 
 For reusable evidence, read `references/reproducible-evidence-playbook.md`; use `scripts/evidence_normalizer.py` to create a redacted ordered package, `scripts/transcript_diff.py` to locate the first chain divergence, and `scripts/practice_lab.py` to exercise positive and negative protocol controls offline.
 
-The skill-owned loopback practice lab is deterministic fixture evaluation, not a fresh live target. Probe it with direct HTTP only; do not activate the paired browser Startup Gate for this self-test.
+The skill-owned loopback practice lab is deterministic fixture evaluation, not a fresh live target. Probe it with direct HTTP only; do not activate the live sequential Startup Gate (`fingerprint-baseline` / `debugger-trace`) for this self-test.
 
 ## Verification and Reporting
 
@@ -225,17 +248,17 @@ Do not mark complete until every gate relevant to the declared shape passes:
 
 - Startup Gate is current.
 - For live claims, the real endpoint, canonical mutation point, and moving state are proven.
-- For a fresh web `live-target`, both first-pass tool evidence surfaces are recorded; `artifact-only` web work states those surfaces as unproven, and non-web primary targets are out of scope instead of inventing web browser proof.
+- For a fresh web `live-target`, both first-pass roles (`fingerprint-baseline` and `debugger-trace`) are recorded with their chosen means or explicit gaps. Gaps block page/runtime-understanding claims; only the strict transport-only direct-endpoint exception may still accept one endpoint-scoped runnable delivery. `artifact-only` web work states those surfaces as unproven, and non-web primary targets are out of scope instead of inventing web browser proof.
 - Clean-baseline and observer effect risk are handled when relevant.
 - Fixed-input helper or decoder checks pass.
-- Non-empty signs, plausible token length, helper load success, one HTTP `200`, a current cookie jar, or an expired browser export are not acceptance by themselves.
+- Non-empty or mint-shaped signs, plausible length, helper load, one HTTP `200`, current cookies, stable reject JSON, gold-similarity, or mint-variant counts are not acceptance; morph lock on one gold sample is not a mainline mandate.
 - Cookie provenance, slot placement, session chain integrity, transport, envelope, decode, stream, pagination, and permission rules are documented when applicable.
 - For `compact-replay` and `collector`, repeated live replay succeeds unless the accepted result is an explicitly bounded offline replay with live acceptance marked unproven.
 - Any final replay or collector runs without browser automation or browser profiles.
 - Output is saved in the requested format.
 - Sensitive artifacts are redacted outside a task-local secret store. A persisted normalized evidence package uses the evidence-specific manifest schema in `references/project-artifact-contract.md`; runnable replay or collector manifests additionally record capability, session scope, helper, and replay evidence without copying secrets. A no-write conversational evidence result does not require a manifest file.
 
-After each meaningful phase, use the concise phase-delta format from `references/report-templates.md`; use the full templates only for major decisions and final delivery. For `compact-replay` and `collector`, finish with its compact protocol handoff summary rather than creating redundant project documents. Always report family choice, what each available evidence surface proved, real endpoint, moving parts, misleading signals, fixed-input proof, final protocol path, collector/helper split, saved paths, browser-free status, and remaining instability. Add cookie, observer effect, sibling route, envelope-family, decode, session, pagination, or minimal-verifiable-fact details only when relevant.
+After each meaningful phase, use the concise phase-delta format from `references/report-templates.md` and fill `browser_mode`, curl impersonate, capsule major, `business_request`, `unproven_routes`, and `next_action`; use the full templates only for major decisions and final delivery. For `compact-replay` and `collector`, finish with its compact protocol handoff summary rather than creating redundant project documents. Always report family choice, what each available evidence surface proved, real endpoint, moving parts, misleading signals, fixed-input proof, final protocol path, collector/helper split, saved paths, browser-free status, and remaining instability. Add cookie, observer effect, sibling route, envelope-family, decode, session, pagination, or minimal-verifiable-fact details only when relevant.
 
 When a reusable family emerges, preserve 5 to 15 structural facts using `references/minimal-verifiable-facts-playbook.md`. Keep a one-job lesson task-local; after two independent reproductions, use `references/experience-card-schema.md` to promote only the invariant, fixture, positive/negative oracles, and applicability boundary.
 
@@ -249,11 +272,13 @@ Load only references that match current evidence, but keep every route directly 
 - `references/profiles/browser-hook-snippets/index.md`
 - `references/profiles/static-ast/index.md`
 - `references/profiles/env-patch/index.md`
+- `references/runtime-state-continuity-playbook.md`
 - `references/pure-python-rebuild-playbook.md`
 - `references/startup-triage-playbook.md`
-- `references/workflow-overview.md`
+- `references/workflow-overview.md` (Phase 0-5 map, multi-stage settle, stage fields)
 - `references/tool-playbook.md`
-- MCP family choice and signal-driven auto-judge: read `references/mcp-routing-playbook.md` when deciding among artifact-only, Camoufox/managed host, chrome-devtools, js-reverse, passive wire stores, wire visibility, or environment providers
+- low-observer boundary value capture upgrade: `references/silent-value-capture-playbook.md`
+- MCP family choice and signal-driven auto-judge: read `references/mcp-routing-playbook.md` when deciding among artifact-only, Camoufox/managed host, chrome-devtools, js-reverse, silent-value-capture, passive wire stores, wire visibility, or environment providers
 - local attach ports or debug profile path issues: `references/local-mcp-environment.md`
 - `references/escalation-ladder-playbook.md`
 - `references/delivery-gate-playbook.md`
@@ -263,69 +288,76 @@ Load only references that match current evidence, but keep every route directly 
 - `references/symptom-heuristics.md`
 - `references/pattern-atlas.md`
 - `references/minimal-verifiable-facts-playbook.md`
-- `references/reproducible-evidence-playbook.md`
 - `references/provider-work-order.md`
 - `references/specialist-handoff-contract.md`
+- claim upgrade / dual-surface confirmation: `references/evidence-corroboration-gate.md`
+- local-vs-success causal isolation: `references/positive-sample-ablation-playbook.md`
+- multi-surface morph/state-chain verifiers: `references/verifier-morph-and-state-chain-playbook.md`
+- primary failure surface labels and stuck next action: `references/failure-surface-taxonomy.md`
+- anti-bot class (signature-bound / interceptor / pure-obfuscation): `references/anti-bot-class-playbook.md`
 - `references/project-artifact-contract.md`
 - `references/case-reuse-playbook.md`
 - `references/experience-card-schema.md`
+- promoted secret-free cards: `references/experience-cards/page-local-exception-needs-negative-control.json`, `references/experience-cards/standard-primitive-concat-before-custom-port.json`, `references/experience-cards/signer-egress-stub-must-match-callsite.json`, `references/experience-cards/server-clock-must-enter-observed-writer.json`
 
 ### Request path, signers, and obfuscation
 
-- modified standard digests, uint32 ports, fixed-sample crypto: `references/crypto-patterns.md`
-- string-table or obfuscator-style recovery: `references/obfuscation-guide.md`, `references/offline-inline-deob-playbook.md`
-- `references/decoy-and-real-request-playbook.md`
-- `references/transport-wrapper-playbook.md`
+- signer stage parity and ordered replay failure ladder: `references/signer-parity-chain-playbook.md`
+- VM/interceptor exit-first, nested standard-ISA memory-image, protobuf serializeBinary / wasm encode(i32,i32) before opcodes, reverse-trace, ALU-overlap ID; compile-body snapshots after param substitution are key material, not call traces; `fromCharCode` heat (million vs 0) diagnoses VM entry: `references/jsvmp-analysis-playbook.md`
+- modified standard digests, native-presence IV/Tj/per-round K/packing/compress branch selection (Node eval of a harvested digest is not the browser oracle) before porting constants, constant-pool concat before custom ports, named JSEncrypt/JSBN/RSA under statement-split still needs concat + PKCS#1 (freeze the pad string before gold-token policy; random padding makes inequality expected), missing block avalanche keeps the bundled helper, named AES/GCM that avalanches still needs packed-key / GCM-frame / gold-pair XOR / inner-field PRNG, decoy timestamp/PRNG wrappers versus inner hasher or a server-issued clock that must enter the observed writer (signer argument, query clock, or ajax success; not an inner Date freeze), two-stage mix (placeholder vs host; unpadded vs padded hex; length follows first-mix hex), size-fingerprint DES/3DES/AES/RC4 (short-vector 8-byte CT under a named AES is DES/3DES; host-object catch-paths can reorder cipher keys), TEA/XTEA family constants, key-in-bytecode recovery, uint32 ports, named MD5 timestamp dual-miss keeps the bundled helper, hasher-internal eval/setInterval of recovered R is a stub not a preimage, fixed-sample crypto: `references/crypto-patterns.md`
+- string-table or obfuscator-style recovery, decoder integrity loops, rotating per-fetch write-slot, huge chart/painter wrappers vs tiny list-URL module: `references/obfuscation-guide.md`, `references/offline-inline-deob-playbook.md`
+- HTML placeholder zeros with no list XHR; dummy HTTP filler does not retire a WebSocket list; chrome-devtools HTTP logs omit WebSockets; skip non-JSON WS prefix frames: `references/decoy-and-real-request-playbook.md`, `references/structured-transport-playbook.md`
+- empty `beforeSend` IIFE is not a signer; freeze the wire body: `references/transport-wrapper-playbook.md`
 - `references/patched-helper-playbook.md`
-- `references/jsvmp-analysis-playbook.md`
-- `references/opaque-runtime-profile-playbook.md`
+- opaque stages, collect-then-patch, nested memory-image, backend bakeoff, same-session nondeterministic feed: `references/opaque-runtime-profile-playbook.md`
 
 ### Cookies, bootstrap state, and sessions
 
 - multi-layer business identity after login: `references/multi-context-session-playbook.md`
-- `references/cookie-provenance-playbook.md`
+- cookie writer/refresh plus impersonate-jar hostname bind (empty-domain vs host-only split): `references/cookie-provenance-playbook.md`
 - `references/session-contract-playbook.md`
 - `references/public-bootstrap-envelope-playbook.md`
-- `references/challenge-state-envelope-playbook.md`
-- dual writers for one param name: `references/dual-writer-param-playbook.md`
-- local challenge HTML/JS executor contract: `references/local-challenge-executor-playbook.md`
-- `references/server-js-cookie-bootstrap-playbook.md`
+- challenge primary key / same-round punish HTML / rotating document token / 200 filler-JSON punish / answer-accept vs complete latch: `references/challenge-state-envelope-playbook.md`
+- dual writers for one param name, cookie vs query or in-memory global: `references/dual-writer-param-playbook.md`
+- local challenge executor, init/observe/interact/sign, marker lifecycle, formal backend choice, helper identity is arity/I-O not URL; visual-oracle drag origin is box `x1` not center; OCR/captcha-platform is diagnostic only, never collector runtime: `references/local-challenge-executor-playbook.md`
+- document-complete load-latch mint, cookie-vs-query WAF slots, rotating 202 JS, cookie vs window slot, 200 filler-value punish: `references/server-js-cookie-bootstrap-playbook.md`
 - `references/side-asset-bootstrap-playbook.md`
 
 ### Host-bound runtime and observation
 
-- `references/environment-patch-playbook.md`
+- heat vs causal host reads, page-world replica vs local DOM host, WebIDL FTS, `window.eval` constructors, Proxy-toxic live collections; expose webpack `__wpRequire` and skip UI `$mount`; `setTimeout` must never run the callback synchronously (drive with `__drainTimers__`); fake canvas/audio can be enough for a cookie-mint helper once impersonate already returns business 200; CDP webdriver configurable delete before Camoufox: `references/environment-patch-playbook.md`
+- local vendor fingerprint SDK runtime: `references/local-sdk-env-patch-playbook.md`
 - `references/embedded-browser-runtime-playbook.md`
-- `references/iv8-runtime-cheatsheet.md`
-- `references/challenge-artifact-harvest-playbook.md`
-- prefer redirect URL harvest before encrypt rebuild; see also `references/local-challenge-executor-playbook.md`
-- `references/hook-techniques.md`
-- `references/anti-debug-playbook.md`
-- `references/env-diff-playbook.md`
+- mixed script charset, unnamed meta content, `page.load` `baseURL`, ThreadPool isolate, Node decoy mint vs native host: `references/iv8-runtime-cheatsheet.md`
+- public multi-arity export oracle before encrypt-chain rebuild; cookie/redirect still win: `references/challenge-artifact-harvest-playbook.md`
+- observer-toxic wraps on `Number.prototype.toString`, `TextEncoder.encode`, and Proxy of TypedArray / live collections; Function-constructor/`eval` compile-body after param substitution is key material; never wrap global `Function.prototype.apply`/`call`; `Array.join` can expose plaintext: `references/hook-techniques.md`
+- `Function("debugger")` / `Function("while (true) {}")` hangs including live js-reverse re-calls, exact-body strip only, a dead `!==` around one constructor does not clear attach, decoder integrity loops, debugger opcodes, hasher-internal eval/setInterval of recovered R (stub hosts, keep digest), MCP select_page timeout is debugger_attach_gap then offline harvest, JSVMP XHR silence from webdriver is not attach hang: `references/anti-debug-playbook.md`
 
 ### Transport, decode, and structured protocols
 
 - async export, report download, task isolation: `references/async-export-job-playbook.md`
-- `references/transport-pre-gate-playbook.md`
+- sibling-200 plus this-route stdlib 403: ablate installed curl impersonate on the same admitted token bytes before restarting signer or canvas reverse: `references/transport-pre-gate-playbook.md`
 - `references/native-transport-profile-playbook.md`
-- `references/response-decode-playbook.md`
-- `references/structured-transport-playbook.md`
+- CSS-in-HTML sprite hide-class / in-flow offset / image-byte identity, font or glyph maps, JSON numeric CR/LF strip: `references/response-decode-playbook.md`
+- UTF-8 MCP dumps corrupt protobuf; capture hex at serializer; stale clock-bucket tokens 403; skip non-JSON WebSocket prefix/ack frames: `references/structured-transport-playbook.md`
 - `references/stateful-stream-e2ee-playbook.md`
 
 ### Verifiers, pagination, exceptions, and recovery
 
-- `references/verifier-replay-playbook.md`
+- device-trust companion gates / L0-L3: `references/device-trust-sidecar-playbook.md`
+- local fingerprint SDK env patch: `references/local-sdk-env-patch-playbook.md`
+- gateway/grant/business accept, same-world, profile identity, retry/smoke ladder; source class is orthogonal to ownership class: `references/verifier-replay-playbook.md`, `references/parameter-ownership-playbook.md`
+- issued challenge image/token must be consumed; unused fetch can poison a session pass-rate; accept-rate and reject-rate may be different metrics: `references/challenge-state-envelope-playbook.md`
 - `references/verifier-error-localization-playbook.md`
-- `references/positive-sample-hygiene-playbook.md`
+- multi-surface morph/state-chain gates: `references/verifier-morph-and-state-chain-playbook.md`
+- positive-sample hygiene and post-hygiene behavior calibration: `references/positive-sample-hygiene-playbook.md`
 - `references/pagination-route-pivot-playbook.md`
 - `references/page-specific-exception-playbook.md`
-- `references/troubleshooting-playbook.md`
+- stuck next action then symptom recipes: `references/troubleshooting-playbook.md`
 
 ### Skill validation
 
-- `references/skill-maintenance.md`
-- `references/official-self-test-task-suite.md`
-- behavioral forward-test execution and independent review: `references/forward-testing-playbook.md`
+- maintenance, official suite, and independent behavioral review: `references/skill-maintenance.md`, `references/official-self-test-task-suite.md`, `references/forward-testing-playbook.md`
 
 ## Maintaining This Skill
 
@@ -335,10 +367,6 @@ Put reusable detail in its most specific reference. Keep this entry as the proto
 
 ## Bottom Line
 
-When a site looks browser-only, ask:
-
-1. What is the real request?
-2. What is the real changing state?
-3. Can that state be rebuilt locally?
+When a site looks browser-only, ask what the real request is, which state really changes, and whether that state can be rebuilt locally.
 
 Most targets collapse once those questions are answered with wire evidence and repeatable replay.

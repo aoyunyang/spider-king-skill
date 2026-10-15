@@ -10,10 +10,13 @@ Use this reference when:
 ## Contents
 
 - [Core rule](#core-rule)
+- [Single baseline purity](#single-baseline-purity)
 - [1. Redirect and wrapper-page triage](#1-redirect-and-wrapper-page-triage)
 - [2. Separate four layers](#2-separate-four-layers)
 - [3. Standard-vs-patched workflow](#3-standard-vs-patched-workflow)
 - [4. Narrowing strategy](#4-narrowing-strategy)
+- [4A. Page-world replica versus local DOM host](#4a-page-world-replica-versus-local-dom-host)
+- [4B. Host-fidelity L0-L4](#4b-host-fidelity-l0-l4)
 - [5. Preferred delivery shapes](#5-preferred-delivery-shapes)
 - [6. Network sanity checks](#6-network-sanity-checks)
 - [7. Verification checklist](#7-verification-checklist)
@@ -21,6 +24,20 @@ Use this reference when:
 ## Core rule
 
 Environment mismatch is evidence, not a reason to surrender to automation.
+
+## Single baseline purity
+
+Bind one `baseline_id` for a replay chain. Do not mix the following from different captures into one chain:
+
+- UA / Client-Hints / navigator identity
+- cookies, storage, and bootstrap artifacts
+- screen, locale, timezone, and language
+- TLS / HTTP profile and proxy exit
+- canvas, WebGL, audio, font, or other fingerprint surfaces
+
+Foreign samples may be diagnostic controls only. If two sources conflict, keep one baseline, label the other as contrast evidence, and restart the chain rather than splicing "best fields" together.
+
+Sensor-like or signer-like payloads that embed client identity must stay generation-matched to the same baseline as the transport and headers.
 
 ## 1. Redirect and wrapper-page triage
 
@@ -76,9 +93,35 @@ Reduce the problem in layers:
 
 At every layer, test the same fixed input and preserve the same intermediate values.
 
+Prefer sniper evidence of actually-read host surfaces over net-wide attribute dumps when choosing what to patch (`references/environment-patch-playbook.md`). Keep one pure baseline; do not splice UA, cookies, fingerprint, and transport from different machines.
+
 Goal:
 
 - find the smallest local environment that still reproduces the live output
+
+## 4A. Page-world replica versus local DOM host
+
+A JavaScript host replica that matches **inside Chrome** (page `eval`, iframe, `srcdoc`) is a different environment from jsdom or Node.
+
+- jsdom `url: "about:srcdoc"` throws `DOMException`. Keep an `https` document URL plus `<base href>`. The Chrome oracle iframe href may still be `about:srcdoc`
+- wrapping `TextEncoder.encode` is observer-toxic; `encode.length === 0` is a real contract. A `Proxy` on `Uint8Array` makes `ArrayBuffer.isView` false
+- wrapping `Number.prototype.toString` is observer-toxic for some mixers even when FTS only hits `Object` / `setInterval`. Do not treat "oracle-safe in one earlier run" as a standing license
+- freeze same-world HTML + inline script + server clock before a live POST. Stale-tab script plus fresh HTML constants is not protocol disproof
+- if the local mix still diverges after a Chrome replica hits the oracle, sniper the next heat surface; do not keep stacking the replica that already worked in Chrome. See `references/environment-patch-playbook.md`
+
+## 4B. Host-fidelity L0-L4
+
+Score local-versus-browser host fidelity as a ladder. This is not verifier smoke L1-L4 and not device-trust L0-L3.
+
+| Level | Question | Pass hint |
+|---|---|---|
+| L0 count | native nondeterministic sources fire in the same order of magnitude | `Math.random` / `Date.now` / native `eval` counts |
+| L1 sequence | key API order matches after noise filter | LCS of the native API sequence |
+| L2 value feed | local host consumes the browser's recorded values | byte-stable deterministic intermediates |
+| L3 protocol | submitted param-name set matches the browser request | missing/extra fields are fidelity bugs |
+| L4 eval sha256 | dynamic compile-body hashes appear in the same order | SDK decrypt path, not third-party scripts |
+
+Canvas, `navigator`, and other **JS shims cannot be probe-counted as L0**. Native probes do not see them. Feed shim values from the same session, or hardcode proved scalars; do not report shim call counts as engine fidelity.
 
 ## 5. Preferred delivery shapes
 
@@ -120,6 +163,17 @@ Before blaming the signer, compare:
 4. origin and referer
 5. response content type and raw body
 6. decode path if the payload shape looks right but the parsed data is wrong
+7. whether HTML, inline script, and server clock come from one world
+
+
+
+## 6A. Host-local fingerprint cache
+
+Foreign fingerprint or environment caches are contrast only.
+
+- resample host-local fingerprint surfaces on the execution host
+- do not splice UA, Client-Hints, canvas/WebGL, screen, and TLS from different machines into one live chain
+- keep the protocol profile identity in `references/parameter-ownership-playbook.md` aligned with the execution host claim
 
 ## 7. Verification checklist
 

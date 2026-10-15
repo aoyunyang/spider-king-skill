@@ -20,7 +20,7 @@ If the entry, script URL, version, call chain, session bootstrap, transport wrap
 3. Capture fixture B from an independent run and change at least one decisive input. A copied fixture with only its expected output edited is not independent evidence.
 4. Split moving fields into server-issued, request-derived, session-bound, random, time-derived, and locally computed values.
 5. Port the smallest primitive first: digest, alphabet, stream transform, packer, key schedule, field builder, or response decoder.
-6. Compare against fixture A after each primitive. Save the first divergent byte, field, or branch before changing the next unit.
+6. Compare against fixture A after each primitive. Save the first divergent byte, field, or branch before changing the next unit. For multi-stage join/time/nonce/key/digest mismatches, use `references/signer-parity-chain-playbook.md`.
 7. Before restoring live fields, pass fixture B or the published-vector-plus-capture pair without target-specific branching in the implementation.
 8. Only after both parity checks, restore the random and time paths and check shape, length, alphabet, URL roundtrip, or binary envelope invariants.
 9. Attach request glue last. Use one coherent `requests.Session` and rebuild request-derived values for every call.

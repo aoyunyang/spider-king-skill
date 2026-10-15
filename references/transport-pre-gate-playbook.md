@@ -8,6 +8,7 @@ Use this playbook when the clean baseline dies before meaningful application sem
 - [Core idea](#core-idea)
 - [Identity coherence](#identity-coherence)
 - [Fast execution path](#fast-execution-path)
+- [Minimal admission matrix](#minimal-admission-matrix)
 - [Native escalation checkpoint](#native-escalation-checkpoint)
 - [High-value checks](#high-value-checks)
 - [Common traps](#common-traps)
@@ -21,6 +22,7 @@ Use this playbook when the clean baseline dies before meaningful application sem
 - a stdlib client still fails after copying browser headers and cookies, while a browser-like transport reaches a different branch
 - impersonated transport or mobile or app UA passes while default desktop or stdlib traffic fails
 - one challenged landing route fails, but a sibling auth, identity, or business route still works
+- a stdlib client returns HTTP 403 JSON forbidden after copying a live-admitted token or cookie, while installed curl impersonate returns business 200 on those same bytes
 - the same implementation alternates between success and access denial by proxy exit or network path
 
 ## Core idea
@@ -58,6 +60,13 @@ second, and runtime fingerprint data from a third unless live captures prove the
 target tolerates that mixture. A root page can pass with an incoherent tuple
 while a route, sidecar, or business request fails later.
 
+Lock replay identity to the installed curl impersonate chrome major from
+`scripts/check_reverse_env.py`. Evidence-host major should match that
+impersonate. Do not copy a newer live Chrome major into User-Agent or Client
+Hints while TLS/H2 stays on a lower impersonate. That mismatch is
+`transport-admission` / profile-drift: repair the capsule, do not restart
+application-layer risk-control reverse and do not add extra APIs.
+
 ## Fast execution path
 
 1. Freeze a small admission matrix.
@@ -83,6 +92,7 @@ while a route, sidecar, or business request fails later.
 3. Test narrow transport variations before giant bundle work.
    Common variations:
    - stdlib client vs impersonated TLS client
+   - the same live-admitted token or cookie bytes on stdlib versus impersonate, especially when sibling routes already return 200 on stdlib
    - HTTP/2 vs HTTP/1.1
    - desktop browser UA vs mobile or app UA
    - challenged landing route vs sibling auth or data route
@@ -106,6 +116,37 @@ while a route, sidecar, or business request fails later.
    the state `egress-gated`, change the exit or cooldown, and rerun the whole
    chain. If the browser succeeds but the protocol client fails, then inspect
    transport coherence, sidecar count, cookie transition, and serialization.
+
+## Minimal admission matrix
+
+Before changing signer, cookie, or payload code, freeze a small same-input
+matrix. Hold the route, method, business parameters, session chain, referer,
+and pacing constant while varying only the transport surface under test:
+
+```text
+same route + same business input + same session
+  -> plain client / HTTP version A
+  -> closest admitted client / HTTP version B
+  -> compare protocol result, response family, and business oracle
+```
+
+Record at least the client profile, negotiated HTTP version, ALPN when known,
+status class, response family, parseable business anchor, and whether the
+connection was new or reused. A transport failure is only a pre-gate finding;
+the admitted row must reach the real downstream business oracle before the
+application layer is considered understood.
+
+Use one intentional negative control, such as replacing the admitted
+transport with the plain-client profile. If that control does not fail for the
+expected transport reason, do not promote the transport-gated hypothesis.
+Conversely, if the differential disappears when cookies, session state,
+signer fields, or permissions are held correctly, return to the relevant
+request or session playbook instead of widening the transport profile.
+
+HTTP/2, a particular ALPN value, or a browser-like client is not a universal
+recipe. Keep the accepted profile route-local until an independent target
+repeats the same invariant, and preserve connection reuse or H2 settings only
+when live evidence shows they matter.
 
 ## Native escalation checkpoint
 
@@ -147,10 +188,13 @@ raw values into universal defaults.
 ## Common traps
 
 - blaming cookies or signatures for traffic that never cleared transport admission
+- treating stdlib 403 JSON forbidden of a live-admitted token as a bad signer because sibling routes still return 200 on stdlib
+- restarting canvas, audio, or WebGL reverse after impersonate plus the current helper already returns business 200
 - changing only `User-Agent` or HTTP headers when the gate is decided by ClientHello or H2 profile before the request semantics exist
 - treating JA3 or JA4 equality as the only goal instead of matching the underlying transport behavior that the route actually checks
 - hard-freezing one browser fingerprint hash even though that browser family randomizes extension order or GREASE between requests
 - hardcoding one magical UA across the whole collector when only one route needed it
+- copying a newer live Chrome major onto a lower curl impersonate and treating the new challenge family as a fresh signer problem
 - treating impersonated TLS as final victory instead of the start of application-layer reversal
 - reversing the wrong verifier or challenge page because a weaker client stack was silently diverted into a different gate family
 - patching a distant default TLS stack piece by piece before testing a closer transport family or narrow route-local adapter
@@ -175,4 +219,5 @@ Report these items explicitly:
 - which narrow client profile admitted the baseline
 - whether the exception is route-local or global
 - whether a sibling route bypassed the gate
+- whether stdlib 403 versus impersonate 200 on the same admitted bytes decided transport versus signer
 - which later family triage won after admission

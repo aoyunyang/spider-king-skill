@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "id": "signer-egress-stub-must-match-callsite",
+  "status": "promoted",
+  "title": "Signer-egress stubs must match the observed callsite",
+  "invariant": "A local signer-egress stub is reusable only when it wraps the observed transport callsite and fires the same continuation callbacks the next-page signer reads; wrapping a quieter sibling channel, omitting the continuation, or harvesting a returned export instead of the observed egress leaves the follow-up unsigned.",
+  "scope": {
+    "family": "signer-gated",
+    "boundary": "runtime",
+    "appliesWhen": [
+      "a local helper must harvest a signer field from an in-page transport call",
+      "the page exposes more than one transport-looking channel such as XHR, fetch, or library ajax",
+      "the next request is issued from a success, complete, or load continuation",
+      "the page also exposes a returned export that looks like a signer"
+    ],
+    "stopsWhen": [
+      "the signer is a returned export rather than an egress harvest",
+      "wrapping the observed callsite plus its continuation already yields the follow-up field",
+      "the missing field follows clock, key, or session mutation rather than the stub"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "ad7fdd4392331c1ea1e7c653f65ae891eb9c62587ef6c6578e99d9e1c7510dac",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "e693712484c8a81655c735d4513aefbaa5403cc3aa499e467e392c860faa654c",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "033cd7117b76a7b20570382c063dd53f7c42e2214ba11dabd15dd2673a7f59df",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "e693712484c8a81655c735d4513aefbaa5403cc3aa499e467e392c860faa654c",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "5ca4d443e0bc7cfc16a71d351c50d8aec81339236d2c6522017f29846d1298ea",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "843a56bf9a6e047082bf3b2ff3a5bb961bc0c95374b6951307e7eeddc8038b02",
+      "independent": true
+    }
+  ],
+  "fixture": {
+    "path": "references/experience-fixtures/signer-egress-stub-matrix.json",
+    "sha256": "fa46c6a9c3f09d3b6622ae3c64622d1cf231fe15a2de17331816ae1de0007815",
+    "generator": null,
+    "secretFree": true
+  },
+  "oracles": {
+    "positive": "python scripts/experience_fixture_check.py references/experience-fixtures/signer-egress-stub-matrix.json reports positiveOracle=true, callsiteMatched=true, continuationRequired=true, and returnedExportRejected=true",
+    "negative": "setting xhr-send-only.oracle=true, ajax-success-without-complete.secondPageHarvested=true, or returned-export-instead-of-ajax-harvest.oracle=true must fail the fixture checker"
+  },
+  "firstDivergence": {
+    "stage": "helper-bootstrap",
+    "path": "transport.stub.continuation",
+    "kind": "state"
+  },
+  "decision": {
+    "preferredRoute": "iv8-runtime",
+    "action": "wrap the observed transport callsite and fire the continuation the next-page signer reads",
+    "fallback": "if the right callsite plus continuation still misses, stop blaming the stub and open preimage or session"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-08-31",
+    "command": "python scripts/experience_fixture_check.py references/experience-fixtures/signer-egress-stub-matrix.json"
+  }
+}

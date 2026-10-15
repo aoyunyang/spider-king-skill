@@ -59,7 +59,7 @@ All modules are IIFEs with `'use strict'`. They use `watch()` from ProxyMonitor 
 
 ### Critical Loading Order Rules
 
-Module dependency order within `--env` matters. See `references/loading-order.md` for the full standard order. Key constraints:
+Module dependency order within `--env` matters. See `references/profiles/env-patch/references/loading-order.md` for the full standard order. Key constraints:
 - `dom/elements.js` **must** come after `dom/document.js` (depends on Element base class)
 - `webapi/network.js` **must** come after `webapi/xhr.js` and `webapi/fetch.js`
 - `dom/event.js` should come before `dom/document.js`
@@ -69,8 +69,8 @@ Module dependency order within `--env` matters. See `references/loading-order.md
 
 1. Collect `undefinedPaths` from diagnose output
 2. Extract prefix (before first `.`) from each path
-3. Match prefix to module using `references/env-modules.md` mapping table
-4. Manually order modules per `references/loading-order.md`
+3. Match prefix to module using `references/profiles/env-patch/references/env-modules.md` mapping table
+4. Manually order modules per `references/profiles/env-patch/references/loading-order.md`
 5. Manually add dependencies (e.g., `dom/elements.js` requires `dom/document.js`)
 
 `env-diagnose.js` does not sort modules or expand dependencies. It loads exactly the modules supplied via `--env`, in the supplied order.

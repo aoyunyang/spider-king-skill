@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "id": "page-local-exception-needs-negative-control",
+  "status": "promoted",
+  "title": "Page-local request exceptions need a typed negative control",
+  "invariant": "A page or cursor exception is reusable only after sibling pages keep the ordinary profile, the exceptional page fails a type-strict business oracle under that ordinary profile, and the same page passes only after one page-local request-profile change.",
+  "scope": {
+    "family": "session-gated",
+    "boundary": "request",
+    "appliesWhen": [
+      "sibling pages already return the typed business payload on the ordinary request profile",
+      "one page or cursor returns HTTP success with a hint, string, or otherwise untyped array",
+      "a page-local request-profile exception is the hypothesized remaining gate"
+    ],
+    "stopsWhen": [
+      "the ordinary profile already returns the typed business payload on that page",
+      "the difference follows a session, signer, or transport-version mutation rather than the page-local profile",
+      "sibling pages also require the exception profile"
+    ]
+  },
+  "reproductions": [
+    {
+      "jobFingerprint": "1ea20aa29d520d3513d7b526d892c307177122bb7624d6b682b8bfafb10ec447",
+      "observedAt": "2026-08-25",
+      "artifactSha256": "4b850b69cde0d9e0c0b88ab26c38f2b13b461085dd373065f86bbea1bb10a5f6",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "61d540c50fe9a7700e7d49cca729f34c744a6a1a665bf19b9835720fc0684de8",
+      "observedAt": "2026-08-25",
+      "artifactSha256": "bf2c37cfc5ad07abe6c95b3aa75eee4cfeb1f4f440f72978042bf352437ebaf4",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "66612738559b126aff892a6cd2e61f6f7cdbf8d02f3a111e8576514d8143f0ae",
+      "observedAt": "2026-08-25",
+      "artifactSha256": "cc58c7266efd06b9323f46bffd25a7f98fc7d53095924b2797363e62a49f043a",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "330d4493e39305b5e4d22387fefd19cf086a462adf35f963d3648a044009423e",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "0870858c0f13330d1eea256fdfe830b05091cf97539993d3c50573fe979f0756",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "0fa0965e1f6e9fadd5406d9b75b85c8ae05cc9850ab480485650122a1108cb7f",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "0870858c0f13330d1eea256fdfe830b05091cf97539993d3c50573fe979f0756",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "bc71abfe05076f2d80b610e8b6c451b2e75299677c608f48e44cb9ffa5323220",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "0870858c0f13330d1eea256fdfe830b05091cf97539993d3c50573fe979f0756",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "5ca4d443e0bc7cfc16a71d351c50d8aec81339236d2c6522017f29846d1298ea",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "0870858c0f13330d1eea256fdfe830b05091cf97539993d3c50573fe979f0756",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "c17393b342c3fd3cd36bec25f768340c27fbd5973db75b41735cc75833599a51",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "0870858c0f13330d1eea256fdfe830b05091cf97539993d3c50573fe979f0756",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "350c5a84cf64f36cef7dcf58f15b3a500d8a07b0eff9b6ab478267808d34f74e",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "9a50c446ece5017debecc08356c4cfe8e79233870967c4cb2e3b152e97c1817b",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "f98811a95cefc86b43f8fd3b10364c36aaced1c716809c97b8a0d60febfdbf01",
+      "observedAt": "2026-08-31",
+      "artifactSha256": "e1c38be15be95bd8f9b9e2dde572b63d3a794c5d63f2a2371a1cc5048454e98a",
+      "independent": true
+    },
+    {
+      "jobFingerprint": "f2c8f7cf35247bcb5352282636c859ea0a5ade732af6aac9e10eff83603df17b",
+      "observedAt": "2026-09-01",
+      "artifactSha256": "b0b5d4e14303a21bdfb533104f01b886d87d36f8d2442a4042cd06821e92bc05",
+      "independent": true
+    }
+  ],
+  "fixture": {
+    "path": "references/experience-fixtures/page-local-exception-matrix.json",
+    "sha256": "0870858c0f13330d1eea256fdfe830b05091cf97539993d3c50573fe979f0756",
+    "generator": null,
+    "secretFree": true
+  },
+  "oracles": {
+    "positive": "python scripts/experience_fixture_check.py references/experience-fixtures/page-local-exception-matrix.json reports positiveOracle=true, typeStrict=true, and siblingPreserved=true",
+    "negative": "setting ordinary-request.businessOracle=true or exception-request.payloadClass to hint-or-string-array must fail the fixture checker"
+  },
+  "firstDivergence": {
+    "stage": "exceptional-page",
+    "path": "request.profile",
+    "kind": "value"
+  },
+  "decision": {
+    "preferredRoute": "page-specific-exception",
+    "action": "keep the ordinary profile on sibling pages; prove the exceptional page with a one-variable request-profile control against a type-strict business oracle",
+    "fallback": "if the one-variable control does not flip the typed oracle, stop treating this as a page-local exception and open the next family"
+  },
+  "validation": {
+    "lastVerifiedAt": "2026-09-01",
+    "command": "python scripts/experience_fixture_check.py references/experience-fixtures/page-local-exception-matrix.json"
+  }
+}

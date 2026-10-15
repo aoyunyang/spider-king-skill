@@ -1,128 +1,180 @@
 /**
  * @env-module Timer
- * @description 定时器函数模拟
+ * @description Macro-task timer queue. Never runs the callback synchronously.
  * @compatibility Chrome 80+, Firefox 75+, Edge 79+
- * @note 在沙箱环境中，定时器是模拟实现，不会真正延迟执行
+ * @note On hosts without a native event loop, drive the queue with __drainTimers__.
+ *       setInterval is a no-op (returns 0) when no native interval exists.
  */
 
-(function() {
+(function () {
+    const host = typeof window !== 'undefined' ? window : globalThis;
+    const originalSetTimeout = host.setTimeout;
+    const originalClearTimeout = host.clearTimeout;
+    const originalSetInterval = host.setInterval;
+    const originalClearInterval = host.clearInterval;
+
     let timerId = 0;
     const timers = new Map();
-    const intervals = new Map();
+    let scheduling = false;
 
-    // setTimeout
-    const originalSetTimeout = window.setTimeout;
-    window.setTimeout = function(callback, delay, ...args) {
-        if (typeof callback !== 'function') {
-            // 处理字符串代码（不推荐但需要兼容）
-            const code = String(callback);
-            callback = function() {
-                eval(code);
-            };
-        }
-        
-        const id = ++timerId;
-        
-        // 在沙箱环境中，我们记录定时器但可能需要不同的执行策略
-        timers.set(id, {
-            callback,
-            delay: delay || 0,
-            args,
-            createdAt: Date.now()
-        });
-        
-        // 如果有原始实现，使用它
-        if (typeof originalSetTimeout === 'function') {
-            const realId = originalSetTimeout.call(window, function() {
-                timers.delete(id);
-                callback.apply(window, args);
-            }, delay);
-            
-            // 建立映射关系
-            timers.get(id).realId = realId;
-        }
-        
-        return id;
-    };
+    function isUsableNative(fn) {
+        return typeof fn === 'function';
+    }
 
-    // clearTimeout
-    const originalClearTimeout = window.clearTimeout;
-    window.clearTimeout = function(id) {
+    function runTimer(id) {
         const timer = timers.get(id);
-        if (timer) {
-            if (timer.realId !== undefined && typeof originalClearTimeout === 'function') {
-                originalClearTimeout.call(window, timer.realId);
-            }
-            timers.delete(id);
+        if (!timer || timer.cleared) {
+            return false;
         }
-    };
+        timers.delete(id);
+        try {
+            timer.callback.apply(host, timer.args);
+        } catch (err) {
+            if (typeof host.console === 'object' && host.console && typeof host.console.error === 'function') {
+                host.console.error(err);
+            }
+        }
+        return true;
+    }
 
-    // setInterval
-    const originalSetInterval = window.setInterval;
-    window.setInterval = function(callback, delay, ...args) {
-        if (typeof callback !== 'function') {
+    function scheduleNative(id, delay) {
+        if (!isUsableNative(originalSetTimeout)) {
+            return undefined;
+        }
+        let ranSync = false;
+        scheduling = true;
+        let realId;
+        try {
+            realId = originalSetTimeout.call(host, function () {
+                if (scheduling) {
+                    ranSync = true;
+                    return;
+                }
+                runTimer(id);
+            }, delay);
+        } finally {
+            scheduling = false;
+        }
+        if (ranSync) {
+            return undefined;
+        }
+        return realId;
+    }
+
+    host.setTimeout = function (callback, delay) {
+        const args = Array.prototype.slice.call(arguments, 2);
+        let fn = callback;
+        if (typeof fn !== 'function') {
             const code = String(callback);
-            callback = function() {
-                eval(code);
+            fn = function () {
+                (0, eval)(code);
             };
         }
-        
         const id = ++timerId;
-        
-        intervals.set(id, {
-            callback,
+        const timer = {
+            callback: fn,
             delay: delay || 0,
-            args,
-            createdAt: Date.now()
-        });
-        
-        if (typeof originalSetInterval === 'function') {
-            const realId = originalSetInterval.call(window, function() {
-                callback.apply(window, args);
-            }, delay);
-            
-            intervals.get(id).realId = realId;
-        }
-        
+            args: args,
+            createdAt: Date.now(),
+            cleared: false,
+            realId: undefined,
+        };
+        timers.set(id, timer);
+        timer.realId = scheduleNative(id, timer.delay);
         return id;
     };
 
-    // clearInterval
-    const originalClearInterval = window.clearInterval;
-    window.clearInterval = function(id) {
-        const interval = intervals.get(id);
-        if (interval) {
-            if (interval.realId !== undefined && typeof originalClearInterval === 'function') {
-                originalClearInterval.call(window, interval.realId);
+    host.clearTimeout = function (id) {
+        const timer = timers.get(id);
+        if (!timer) {
+            if (isUsableNative(originalClearTimeout)) {
+                originalClearTimeout.call(host, id);
             }
-            intervals.delete(id);
+            return;
+        }
+        timer.cleared = true;
+        timers.delete(id);
+        if (timer.realId !== undefined && isUsableNative(originalClearTimeout)) {
+            originalClearTimeout.call(host, timer.realId);
         }
     };
 
-    // queueMicrotask
-    window.queueMicrotask = window.queueMicrotask || function(callback) {
+    host.setInterval = function (callback, delay) {
+        const args = Array.prototype.slice.call(arguments, 2);
+        if (!isUsableNative(originalSetInterval)) {
+            return 0;
+        }
+        let fn = callback;
+        if (typeof fn !== 'function') {
+            const code = String(callback);
+            fn = function () {
+                (0, eval)(code);
+            };
+        }
+        let ranSync = false;
+        scheduling = true;
+        let realId;
+        try {
+            realId = originalSetInterval.call(host, function () {
+                if (scheduling) {
+                    ranSync = true;
+                    return;
+                }
+                try {
+                    fn.apply(host, args);
+                } catch (err) {
+                    if (typeof host.console === 'object' && host.console && typeof host.console.error === 'function') {
+                        host.console.error(err);
+                    }
+                }
+            }, delay || 0);
+        } finally {
+            scheduling = false;
+        }
+        if (ranSync) {
+            return 0;
+        }
+        return realId;
+    };
+
+    host.clearInterval = function (id) {
+        if (isUsableNative(originalClearInterval)) {
+            originalClearInterval.call(host, id);
+        }
+    };
+
+    host.queueMicrotask = host.queueMicrotask || function (callback) {
         Promise.resolve().then(callback);
     };
 
-    // 用于调试：获取所有活动定时器
-    window.__getActiveTimers__ = function() {
+    host.__getActiveTimers__ = function () {
         return {
             timeouts: Array.from(timers.entries()).map(([id, t]) => ({
-                id,
+                id: id,
                 delay: t.delay,
-                age: Date.now() - t.createdAt
+                age: Date.now() - t.createdAt,
             })),
-            intervals: Array.from(intervals.entries()).map(([id, i]) => ({
-                id,
-                delay: i.delay,
-                age: Date.now() - i.createdAt
-            }))
+            intervals: [],
         };
     };
 
-    // 清除所有定时器
-    window.__clearAllTimers__ = function() {
-        timers.forEach((timer, id) => window.clearTimeout(id));
-        intervals.forEach((interval, id) => window.clearInterval(id));
+    host.__clearAllTimers__ = function () {
+        Array.from(timers.keys()).forEach(function (id) {
+            host.clearTimeout(id);
+        });
+    };
+
+    host.__drainTimers__ = function (limit) {
+        const max = limit == null ? 20000 : limit;
+        let n = 0;
+        while (timers.size && n < max) {
+            const id = timers.keys().next().value;
+            if (runTimer(id)) {
+                n += 1;
+            } else {
+                timers.delete(id);
+            }
+        }
+        return n;
     };
 })();

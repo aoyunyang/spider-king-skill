@@ -9,6 +9,7 @@ The goal is to decide what kind of fight this is before you load giant bundles o
 - [Startup gate](#startup-gate)
 - [Capability-aware evidence roles](#capability-aware-evidence-roles)
 - [Escalation ladder before full browser dependence](#escalation-ladder-before-full-browser-dependence)
+- [Anti-bot class](#anti-bot-class)
 - [Family triage](#family-triage)
 - [Observer-effect rule](#observer-effect-rule)
 - [Continuation sibling scan](#continuation-sibling-scan)
@@ -21,14 +22,15 @@ Complete these four checks first:
    - choose `live-target` when a current page or endpoint needs fresh wire and runtime evidence
    - choose `artifact-only` when the input is a saved request, packet capture, source file, JS or WASM sample, token, cookie, or response without a live target requirement
    - choose `continuation` when the same target, session assumptions, tool registry, and delivery goal remain current
+   - when a user-delivered same-family skeleton is present, record it during intake and prefer process migration over zero-base behavior reverse
    - do not claim live acceptance, current endpoint behavior, or runtime provenance from artifact-only evidence
 2. environment and tool sanity
    - run `scripts/check_reverse_env.py --project-root <project>` when local execution is available; fingerprint only explicitly selected public helper lockfiles with repeatable `--helper-lockfile <path>` arguments
    - treat project `.venv` coherence as advisory by default; add `--require-project-venv` only when the user or bound project makes that environment a hard gate
    - for web `live-target`, confirm whether both `chrome-devtools` and `js-reverse` are usable through schemas, tool lists, or non-target health surfaces; this capability check must not open the target in both tools
-   - record a capability snapshot: required browser families, optional passive wire-store / wire-visibility / ENV families when relevant, required methods present, optional methods present, selected fallbacks, configured browser mode (`launch`/`attach`/`unavailable`), debuggable endpoint known or not, and blockers
+   - record a capability snapshot: required browser families, optional passive wire-store / wire-visibility / ENV families when relevant, optional `silent_backend=available|absent`, required methods present, optional methods present, selected fallbacks, configured browser mode (`launch`/`attach`/`unavailable`), debuggable endpoint known or not, and blockers
    - for web `live-target`, do not place both browser tool families in one parallel tool batch
-   - for web `live-target`, grant initial `TARGET_ACTIVE` ownership to `chrome-devtools`; defer the first `js-reverse` target action until the Chrome handoff gate in `references/tool-playbook.md` is complete
+   - for web `live-target`, grant initial `TARGET_ACTIVE` by Auto Judge: default `chrome-devtools` when DP/initiator work is not required; if DP/initiator work is already required, grant `js-reverse` as the single owner for both `fingerprint-baseline` and `debugger-trace` and do not launch a second Chrome. Record `launch` vs `attach` and never pretend launch is attach. Defer a different family's first target action until the handoff gate in `references/tool-playbook.md` is complete; when `js-reverse` already owns the host, attach/select that same page instead of opening `chrome-devtools`
    - if the primary target is APK, native app, or mini-program, declare out of scope for this pure-web skill; do not invent web paired-browser first-pass as ceremony
    - for `artifact-only`, inspect local runtimes and supplied files first; browsers are not a ceremonial requirement
    - for `continuation`, reuse the prior capability snapshot unless the registry, browser mode, or target context changed
@@ -49,23 +51,59 @@ Choose an evidence role from the capability snapshot, not from a vendor label. R
 
 | Evidence role | Use it for | Minimum proof | Capability-aware limit or fallback |
 |---|---|---|---|
-| `fingerprint-baseline` | A clean flow where risk, visible interaction, renderer state, or observer effect may change the sample | untouched request and response, redirects, page state, configured browser/host mode, and session inventory | assign this role to stock Chromium via `chrome-devtools` by default, or to Camoufox/managed host when fingerprint pressure is high; if no compatible host is proved, record the role gap and keep the ordinary clean Chrome baseline honest |
-| `debugger-trace` | Initiator, source, call-frame, argument, return-value, or canonical-mutation evidence | correlate one wire request with its caller and decisive mutation boundary | use only schema-confirmed debugger capabilities; fall back to saved source, the earliest stable breakpoint, a narrow behavior-preserving hook, or offline runtime proof |
+| `fingerprint-baseline` | A clean flow where risk, visible interaction, renderer state, or observer effect may change the sample | untouched request and response, redirects, page state, configured browser/host mode, and session inventory | assign this role to stock Chromium via `chrome-devtools` by default; if DP/initiator work is already required, `js-reverse` may own this role on the same host; Camoufox/managed host only when fingerprint pressure is high; if no compatible host is proved, record the role gap and keep the ordinary clean Chrome baseline honest |
+| `debugger-trace` | Initiator, source, call-frame, argument, return-value, canonical-mutation, or silent-value boundary evidence | correlate one wire request with its caller/mutation boundary, and/or a `fixed_input_ready` silent-value card | use `js-reverse` when attach exists; use `silent-value-capture` on upgrade triggers or when attach is missing but a backend is available; gaps alone do not complete the role |
 | `cdp-bridge` | Network, Runtime, or Debugger evidence inside an already active target-compatible environment | record how the endpoint was obtained, which protocol domains are available, and how events correlate to the baseline | optional and conditional on an explicitly exposed, authorized connection; never guess a port, profile, launch method, or MCP helper |
 
-Supporting passive surfaces such as reqable, HAR, or PCAP may supply wire-store or wire-visibility evidence beside these roles. They never become a fourth concurrent browser owner and never replace the required baseline then debugger first-pass roles on a fresh web `live-target`. Read `references/mcp-routing-playbook.md` when auto-judging among artifact-only, Camoufox/managed host, chrome-devtools, and js-reverse.
+Supporting passive surfaces such as reqable, HAR, or PCAP may supply wire-store or wire-visibility evidence beside these roles. They never become a fourth concurrent browser owner and never replace the required baseline then debugger first-pass roles on a fresh web `live-target`. Debugger-trace means include `js-reverse` and first-class `silent-value-capture` (`references/silent-value-capture-playbook.md`). Read `references/mcp-routing-playbook.md` when auto-judging among artifact-only, Camoufox/managed host, chrome-devtools, js-reverse, and silent-value-capture.
 
-For every fresh web `live-target`, these roles supplement rather than replace the required first passes: collect the judged `fingerprint-baseline`, complete a `sequential handoff`, then collect `debugger-trace` evidence when attach is available. A typical role flow is:
+### Transport-only direct-endpoint exception
+
+This is a narrow delivery exception, not page/runtime understanding and not a
+way to skip available browser evidence. It may accept `compact-replay` or
+`collector` for one exact direct endpoint when baseline or debugger means are
+unavailable and every condition below is proved:
+
+1. the exact business endpoint, method, parameters, response schema, and
+   bounded collection scope are known without relying on a page-context fetch
+2. a same-route, same-input, same-session admission matrix changes only the
+   transport surface; the known-failing profile is retained as a negative
+   control and the admitted profile reaches parseable downstream business data
+3. no target JavaScript signer, page bootstrap, wrapper mutation, challenge
+   state, response decoder, renderer state, interaction, or browser-generated
+   request field participates in the accepted request
+4. any session credential is ordinary carried account state; no page-minted
+   state is assumed, and session compatibility is reported only for sessions
+   actually replayed
+5. page, cursor, route, header, or identity exceptions are kept local and
+   repeated successfully; any claim that an exception is necessary or causal
+   requires an independent one-variable ablation, otherwise necessity remains
+   explicitly unproven
+6. the final Python path exposes the negotiated protocol, fails closed on
+   fallback, proves every promised bound, and passes at least two fresh live
+   replays with the real business oracle
+7. `fingerprint_baseline_gap` and/or `debugger_trace_gap` remain explicit in
+   the capability snapshot and final report; the claim is endpoint-scoped
+   collector acceptance, never that the page/runtime is understood
+
+Exit this exception immediately if any signer, bootstrap, decode, wrapper,
+browser-state, challenge, or interaction surface appears. Resume the normal
+sequential roles or lower the declared shape. HTTP/2, a named ALPN, a UA, or a
+particular client library is never a universal exception trigger by itself.
+
+For every fresh web `live-target` outside the strict transport-only direct-endpoint exception, these roles supplement rather than replace the required first passes: collect the judged `fingerprint-baseline`, complete a `sequential handoff`, then collect `debugger-trace` evidence when attach is available. A typical role flow is:
 
 ```text
-baseline host (`chrome-devtools` default, or Camoufox/managed host on high fingerprint pressure)
+baseline host (`chrome-devtools` default; `js-reverse` owns both roles when DP is already required; Camoufox/managed host on high fingerprint pressure)
   -> optional `cdp-bridge` while the same owner remains TARGET_ACTIVE
   -> evidence checkpoint
-  -> BASELINE_PARKED or RETAINED_EXCEPTION
-  -> `js-reverse` `debugger-trace` when debug attach exists
+  -> if the baseline owner is already `js-reverse`, continue debugger-trace on that host; do not launch `chrome-devtools`
+  -> else BASELINE_PARKED or RETAINED_EXCEPTION, then debugger-trace means branch:
+       attach available -> `js-reverse` first, plus `silent-value-capture` on upgrade triggers
+       attach missing -> `debugger_attach_gap` + `silent-value-capture` if `silent_backend` available
 ```
 
-At most one browser tool family remains `TARGET_ACTIVE`. Treat `cdp-bridge` as an evidence technique under the current owner, not a third concurrent owner. After a role returns its proof or named blocker, hand evidence to the role that can answer the next missing question; do not stay on one route merely because it was selected first. Apply the lifecycle gate in `references/tool-playbook.md` on every switch, including a return to an earlier role.
+At most one browser tool family or silent-value engine-capture backend remains `TARGET_ACTIVE`. Treat `cdp-bridge` as an evidence technique under the current owner, not a third concurrent owner. After a role returns its proof or named blocker, hand evidence to the role that can answer the next missing question; do not stay on one route merely because it was selected first. Apply the lifecycle gate in `references/tool-playbook.md` on every switch, including a return to an earlier role.
 
 ## Escalation ladder before full browser dependence
 
@@ -76,6 +114,16 @@ Use the smallest faithful layer that explains the evidence:
 3. full interaction or rendering dependence: observe in browser, but keep the delivery gate strict and do not confuse observation with the final collector
 
 For the full rung-by-rung rule, proof requirements, and "do not jump layers" contract, read `references/escalation-ladder-playbook.md`.
+
+## Anti-bot class
+
+Before family folklore, classify how the server binds truth using `references/anti-bot-class-playbook.md`:
+
+- `signature-bound` — host/challenge state participates in the answer
+- `behavior-interceptor` — wrappers mutate business requests
+- `pure-obfuscation` — hard to read, host-free once recovered
+
+Record the class as provisional until two evidence surfaces agree. Class choice selects method bias only; it does not replace family triage or the delivery gate.
 
 ## Family triage
 
@@ -211,4 +259,7 @@ On `continuation` intake, before restarting a long reverse:
 - search the workspace for existing collectors, challenge helpers, or notes for the same host or endpoint family
 - reuse a proven pure-protocol path when the target and environment are unchanged
 - only reopen browser or deep reverse surfaces that new evidence actually invalidates
+- if the user delivered a same-family solved pure-protocol skeleton, classify it as `template` and migrate host/path/state-chain before re-deriving behavior walls (`references/case-reuse-playbook.md`, `references/verifier-morph-and-state-chain-playbook.md`)
+- on multi-day verifier continuations with mint-shaped tokens and stable rejects, require the day-card and kill-switches K1-K8 before more token/track reverse (`references/verifier-morph-and-state-chain-playbook.md`)
+- do not reopen already-delivered non-gate business collectors unless the current hard gate or consumer oracle actually regressed
 

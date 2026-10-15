@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "kind": "page-local-exception-matrix",
+  "scope": "one route, one session chain, one pagination cursor",
+  "rows": [
+    {
+      "profile": "ordinary-request",
+      "pagePredicate": "exceptional-page",
+      "requestProfile": "ordinary",
+      "result": {
+        "httpStatusClass": "success",
+        "payloadClass": "hint-or-string-array",
+        "businessOracle": false
+      }
+    },
+    {
+      "profile": "exception-request",
+      "pagePredicate": "exceptional-page",
+      "requestProfile": "page-local-exception",
+      "result": {
+        "httpStatusClass": "success",
+        "payloadClass": "typed-business-array",
+        "businessOracle": true
+      }
+    }
+  ],
+  "siblingControl": {
+    "pagePredicate": "earlier-page",
+    "requestProfile": "ordinary",
+    "result": {
+      "httpStatusClass": "success",
+      "payloadClass": "typed-business-array",
+      "businessOracle": true
+    }
+  },
+  "negativeControl": {
+    "mutation": "replace the page-local exception profile with the ordinary profile on the same page",
+    "expected": "http success with a hint or string array and businessOracle=false"
+  },
+  "scopeBoundary": {
+    "routeLocal": true,
+    "stopsWhen": [
+      "the same typed business payload is observed with the ordinary profile on the exceptional page",
+      "the difference follows a session, signer, transport, or permission mutation instead of the page-local request profile",
+      "the exception profile still lacks the typed business oracle",
+      "sibling pages also require the exception profile"
+    ]
+  }
+}

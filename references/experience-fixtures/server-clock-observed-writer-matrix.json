@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "kind": "server-clock-observed-writer-matrix",
+  "scope": "one helper world, one server-issued clock, one observed writer the signer reads",
+  "observedWriter": "ajax-success",
+  "rows": [
+    {
+      "profile": "date-now-freeze-only",
+      "injectsObservedWriter": false,
+      "requestClockBound": false,
+      "oracle": false
+    },
+    {
+      "profile": "ajax-success-clock-inject",
+      "injectsObservedWriter": true,
+      "requestClockBound": true,
+      "oracle": true
+    }
+  ],
+  "negativeControl": {
+    "mutation": "freeze Date.now while the signer still reads the ajax-success clock",
+    "expected": "request clock unbound, oracle=false"
+  },
+  "scopeBoundary": {
+    "routeLocal": true,
+    "stopsWhen": [
+      "the signer actually reads Date.now as the observed writer",
+      "the extra clock bytes never appear on the request"
+    ]
+  }
+}

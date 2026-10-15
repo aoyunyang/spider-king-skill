@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "kind": "transport-admission-matrix",
+  "scope": "one route, one business input, one session chain",
+  "rows": [
+    {
+      "profile": "plain-client",
+      "transport": {
+        "httpVersion": "HTTP/1.1",
+        "alpn": "http/1.1"
+      },
+      "result": {
+        "class": "transport-failure",
+        "businessOracle": false,
+        "statusClass": "client-rejected"
+      }
+    },
+    {
+      "profile": "admitted-client",
+      "transport": {
+        "httpVersion": "HTTP/2",
+        "alpn": "h2"
+      },
+      "result": {
+        "class": "business-data",
+        "businessOracle": true,
+        "statusClass": "accepted"
+      }
+    }
+  ],
+  "negativeControl": {
+    "mutation": "replace the admitted profile with the plain-client transport",
+    "expected": "transport-failure and businessOracle=false"
+  },
+  "scopeBoundary": {
+    "routeLocal": true,
+    "stopsWhen": [
+      "the same business result is observed across transport profiles",
+      "the difference follows a cookie, session, signer, or permission mutation",
+      "the admitted profile still lacks the downstream business oracle"
+    ]
+  }
+}
